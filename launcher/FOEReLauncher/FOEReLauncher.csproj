@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FOEReLauncher</RootNamespace>
+    <AssemblyName>FOEReLauncher</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- CI overrides this with -p:Version=1.0.<commits in launcher/>.0 -->
+    <Version>1.0.0.0</Version>
+    <Product>FOE Reborn Launcher</Product>
+    <AssemblyTitle>FOE Reborn Launcher</AssemblyTitle>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Framework assemblies the SDK does not reference implicitly for net48. -->
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference assemblies only: lets the net48 build run on any runner. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FOEReLauncher.Tests" />
+  </ItemGroup>
+
+</Project>

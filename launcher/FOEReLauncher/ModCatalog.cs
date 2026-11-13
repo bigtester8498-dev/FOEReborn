@@ -1,0 +1,254 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace FOEReLauncher
+{
+    /// <summary>One mod of the catalogue (downloads/mods/catalog.json on the download site).</summary>
+    public sealed class CatalogEntry
+    {
+        public string Id { get; set; } = string.Empty;
+        public string NameRu { get; set; } = string.Empty;
+        public string NameEn { get; set; } = string.Empty;
+        public string DescriptionRu { get; set; } = string.Empty;
+        public string DescriptionEn { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+
+        /// <summary>"data" or "code" (a code mod runs program code inside the game).</summary>
+        public string Kind { get; set; } = "data";
+
+        /// <summary>The game version range the mod is made for (empty: any).</summary>
+        public string Game { get; set; } = string.Empty;
+
+        public List<ModRequirement> Requires { get; set; } = new List<ModRequirement>();
+        public long Size { get; set; }
+        public string Sha256 { get; set; } = string.Empty;
+
+        /// <summary>Absolute url of the archive (any release asset).</summary>
+        public string Url { get; set; } = string.Empty;
+
+        public string Homepage { get; set; } = string.Empty;
+
+        public bool IsCode => Kind == "code";
+
+        public string Name(string language) => language == "ru" && NameRu.Length > 0 ? NameRu : NameEn.Length > 0 ? NameEn : Id;
+
+        public string Description(string language) => language == "ru" && DescriptionRu.Length > 0 ? DescriptionRu : DescriptionEn;
+    }
+
+    /// <summary>The mod catalogue: format version and entries.</summary>
+    public sealed class ModCatalog
+    {
+        public const int Format = 1;
+
+        private static readonly Regex IdPattern = new Regex(@"^[a-z0-9][a-z0-9_.\-]*$");
+        private static readonly Regex ShaPattern = new Regex("^[0-9a-fA-F]{64}$");
+
+        public List<CatalogEntry> Entries { get; } = new List<CatalogEntry>();
+
+        public CatalogEntry? Find(string id) => Entries.FirstOrDefault(e => e.Id == id);
+
+        /// <summary>Reads the catalogue. Entries with an unsafe id, a relative or non-http url, a missing hash or size
+        /// are left out (a broken entry must not break the list); a newer format or a non-object throws.</summary>
+        public static ModCatalog Parse(string text)
+        {
+            var o = Json.Obj(Json.Parse(text.TrimStart('﻿')));
+            var format = o.ContainsKey("format") ? Json.Long(o, "format") : Format;
+            if (format > Format)
+            {
+                throw new FormatException("catalogue format " + format + " is newer than this launcher reads (" + Format + ")");
+            }
+
+            var catalog = new ModCatalog();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var item in o.TryGetValue("mods", out var mods) && mods is List<object?> list ? list : new List<object?>())
+            {
+                if (!(item is Dictionary<string, object?> m))
+                {
+                    continue;
+                }
+
+                var e = new CatalogEntry
+                {
+                    Id = Json.Str(m, "id") ?? string.Empty,
+                    Author = Json.Str(m, "author") ?? string.Empty,
+                    Version = Json.Str(m, "version") ?? string.Empty,
+                    Kind = Json.Str(m, "kind") == "code" ? "code" : "data",
+                    Game = Json.Str(m, "game") ?? string.Empty,
+                    Sha256 = (Json.Str(m, "sha256") ?? string.Empty).ToLowerInvariant(),
+                    Url = Json.Str(m, "url") ?? string.Empty,
+                    Homepage = Json.Str(m, "homepage") ?? string.Empty
+                };
+                ReadTexts(m, "name", out var nameRu, out var nameEn);
+                ReadTexts(m, "description", out var descRu, out var descEn);
+                e.NameRu = nameRu;
+                e.NameEn = nameEn;
+                e.DescriptionRu = descRu;
+                e.DescriptionEn = descEn;
+                e.Size = m.TryGetValue("size", out var size) && size is long l ? l : 0;
+                if (m.TryGetValue("requires", out var reqs) && reqs is List<object?> rl)
+                {
+                    foreach (var r in rl)
+                    {
+                        if (r is Dictionary<string, object?> ro && !string.IsNullOrEmpty(Json.Str(ro, "id")))
+                        {
+                            e.Requires.Add(new ModRequirement(Json.Str(ro, "id"), Json.Str(ro, "version")));
+                        }
+                    }
+                }
+
+                if (!IdPattern.IsMatch(e.Id) || !ModVersion.IsVersion(e.Version) || !ShaPattern.IsMatch(e.Sha256) || e.Size <= 0 ||
+                    !Uri.TryCreate(e.Url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) ||
+                    !seen.Add(e.Id))
+                {
+                    continue;
+                }
+
+                catalog.Entries.Add(e);
+            }
+
+            return catalog;
+        }
+
+        /// <summary>A text field as {"ru": .., "en": ..} or a plain string (English).</summary>
+        private static void ReadTexts(Dictionary<string, object?> m, string key, out string ru, out string en)
+        {
+            ru = en = string.Empty;
+            if (!m.TryGetValue(key, out var v))
+            {
+                return;
+            }
+
+            if (v is string s)
+            {
+                en = s;
+            }
+            else if (v is Dictionary<string, object?> t)
+            {
+                ru = Json.Str(t, "ru") ?? string.Empty;
+                en = Json.Str(t, "en") ?? string.Empty;
+            }
+        }
+    }
+
+    /// <summary>A file of a mod the launcher installed.</summary>
+    public sealed class InstalledModFile
+    {
+        public InstalledModFile(string path, long size, string sha256)
+        {
+            Path = path;
+            Size = size;
+            Sha256 = sha256;
+        }
+
+        /// <summary>Relative to the game folder, forward slashes ("Mods/example_home/package.json").</summary>
+        public string Path { get; }
+
+        public long Size { get; }
+
+        public string Sha256 { get; }
+    }
+
+    /// <summary>A mod the launcher installed from the catalogue.</summary>
+    public sealed class InstalledMod
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public string Sha256 { get; set; } = string.Empty;
+
+        /// <summary>The mod folder relative to the game folder ("Mods/example_home").</summary>
+        public string Dir { get; set; } = string.Empty;
+
+        public string InstalledAt { get; set; } = string.Empty;
+        public List<InstalledModFile> Files { get; set; } = new List<InstalledModFile>();
+    }
+
+    /// <summary>installed-mods.json beside installed-files.json: what the launcher installed from the catalogue.
+    /// Game updates never touch these files (they are not in installed-files.json).</summary>
+    public sealed class InstalledMods
+    {
+        public List<InstalledMod> Mods { get; } = new List<InstalledMod>();
+
+        public InstalledMod? Find(string id) => Mods.FirstOrDefault(m => m.Id == id);
+
+        public static InstalledMods Load(string path)
+        {
+            var res = new InstalledMods();
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    return res;
+                }
+
+                var o = Json.Obj(Json.Parse(File.ReadAllText(path)));
+                foreach (var item in o.TryGetValue("mods", out var v) && v is List<object?> list ? list : new List<object?>())
+                {
+                    if (!(item is Dictionary<string, object?> m))
+                    {
+                        continue;
+                    }
+
+                    var mod = new InstalledMod
+                    {
+                        Id = Json.Str(m, "id") ?? string.Empty,
+                        Version = Json.Str(m, "version") ?? string.Empty,
+                        Sha256 = Json.Str(m, "sha256") ?? string.Empty,
+                        Dir = Json.Str(m, "dir") ?? string.Empty,
+                        InstalledAt = Json.Str(m, "installedAt") ?? string.Empty
+                    };
+                    if (m.TryGetValue("files", out var files) && files is List<object?> fl)
+                    {
+                        foreach (var f in fl)
+                        {
+                            if (f is Dictionary<string, object?> fo && PathSafety.IsSafeRelativePath(Json.Str(fo, "path")))
+                            {
+                                mod.Files.Add(new InstalledModFile(Json.Str(fo, "path")!, fo.ContainsKey("size") ? Json.Long(fo, "size") : 0, Json.Str(fo, "sha256") ?? string.Empty));
+                            }
+                        }
+                    }
+
+                    if (mod.Id.Length > 0 && PathSafety.IsSafeRelativePath(mod.Dir))
+                    {
+                        res.Mods.Add(mod);
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is IOException || ex is FormatException || ex is UnauthorizedAccessException)
+            {
+                // An unreadable record: the mods count as added by hand, nothing is removed blindly.
+            }
+
+            return res;
+        }
+
+        public void Save(string path)
+        {
+            var mods = Mods.OrderBy(m => m.Id, StringComparer.Ordinal).Select(m => (object?)new Dictionary<string, object?>
+            {
+                ["id"] = m.Id,
+                ["version"] = m.Version,
+                ["sha256"] = m.Sha256,
+                ["dir"] = m.Dir,
+                ["installedAt"] = m.InstalledAt,
+                ["files"] = m.Files.Select(f => (object?)new Dictionary<string, object?> { ["path"] = f.Path, ["size"] = f.Size, ["sha256"] = f.Sha256 }).ToList()
+            }).ToList();
+            var temp = path + ".tmp";
+            File.WriteAllText(temp, Json.Write(new Dictionary<string, object?> { ["format"] = 1, ["mods"] = mods }));
+            if (File.Exists(path))
+            {
+                File.Replace(temp, path, null);
+            }
+            else
+            {
+                File.Move(temp, path);
+            }
+        }
+
+        public static string Now() => DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+    }
+}

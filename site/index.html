@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOE Reborn — скачать лаунчер</title>
+<meta name="description" content="FOE Reborn: Fallout Equestria: Remains на Unity. Лаунчер ставит игру и держит её в актуальной версии.">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #161a22;
+    --panel-2: #1d222c;
+    --text: #eef1f6;
+    --muted: #969db0;
+    --accent: #3d6ff5;
+    --accent-hover: #5583ff;
+    --border: #262c38;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(1200px 600px at 50% -10%, #1b2130 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px 64px;
+  }
+
+  main { width: 100%; max-width: 720px; }
+
+  header { text-align: center; margin-bottom: 40px; position: relative; }
+
+  h1 {
+    margin: 0 0 12px;
+    font-size: 56px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  .tagline { margin: 0; color: var(--muted); font-size: 18px; }
+
+  .lang {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .lang:hover { color: var(--text); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+
+  .download {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: var(--accent);
+    color: #fff;
+    font-size: 19px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 18px 24px;
+    border-radius: 12px;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .download:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+  .version {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .version strong { color: var(--text); font-weight: 600; }
+
+  h2 { font-size: 20px; margin: 0 0 16px; }
+
+  ol, ul { margin: 0; padding-left: 22px; color: var(--muted); }
+
+  li { margin-bottom: 8px; }
+
+  li strong { color: var(--text); font-weight: 600; }
+
+  .notes-version { color: var(--text); font-weight: 600; margin: 0 0 8px; }
+
+  footer {
+    text-align: center;
+    color: #5d6577;
+    font-size: 13px;
+    margin-top: 32px;
+  }
+
+  footer a { color: #77809a; }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 40px; }
+    .card { padding: 20px; }
+    .lang { position: static; margin-bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <button class="lang" id="lang" type="button">EN</button>
+    <h1>FOE Reborn</h1>
+    <p class="tagline" data-ru="Fallout Equestria: Remains, заново на Unity. Лаунчер ставит игру и сам держит её в актуальной версии."
+       data-en="Fallout Equestria: Remains, rebuilt in Unity. The launcher installs the game and keeps it up to date.">
+      Fallout Equestria: Remains, заново на Unity. Лаунчер ставит игру и сам держит её в актуальной версии.</p>
+  </header>
+
+  <section class="card">
+    <a class="download" href="downloads/FOEReLauncher.exe" data-ru="Скачать лаунчер для Windows" data-en="Download the launcher for Windows">
+      Скачать лаунчер для Windows
+    </a>
+    <p class="version">
+      <span data-ru="Версия игры:" data-en="Game version:">Версия игры:</span> <strong id="game-version">—</strong> ·
+      <span data-ru="Тестовый канал:" data-en="Testing channel:">Тестовый канал:</span> <strong id="test-version">—</strong> ·
+      <span data-ru="Лаунчер:" data-en="Launcher:">Лаунчер:</span> <strong id="launcher-version">—</strong>
+    </p>
+  </section>
+
+  <section class="card">
+    <h2 data-ru="Как запустить" data-en="How to start">Как запустить</h2>
+    <ol>
+      <li data-ru="<strong>Скачайте</strong> FOEReLauncher.exe (Windows 10 или 11, x64)." data-en="<strong>Download</strong> FOEReLauncher.exe (Windows 10 or 11, x64)."></li>
+      <li data-ru="<strong>Положите</strong> его в отдельную папку: игра встанет рядом, в папку game." data-en="<strong>Put</strong> it into a folder of its own: the game goes next to it, into game/."></li>
+      <li data-ru="<strong>Запустите</strong> и нажмите «Установить». Полная загрузка около 1 ГБ, обрыв связи не страшен: загрузка продолжится." data-en="<strong>Run</strong> it and press Install. The full download is about 1 GB; a broken connection is fine, the download resumes."></li>
+      <li data-ru="Дальше лаунчер <strong>скачивает только изменившиеся части</strong> игры и обновляет себя. Ваши моды в Mods/ и сохранения он не трогает." data-en="After that the launcher <strong>downloads only the changed parts</strong> of the game and updates itself. It never touches your mods in Mods/ or your saves."></li>
+    </ol>
+  </section>
+
+  <section class="card" id="notes-card" hidden>
+    <h2 data-ru="Что нового" data-en="What's new">Что нового</h2>
+    <p class="notes-version" id="notes-version"></p>
+    <ul id="notes-list"></ul>
+  </section>
+
+  <footer>
+    FOE Reborn · <span data-ru="фанатский проект по мотивам Fallout Equestria: Remains" data-en="a fan project based on Fallout Equestria: Remains">фанатский проект по мотивам Fallout Equestria: Remains</span>
+  </footer>
+</main>
+
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('lang'); } catch (e) { /* private mode */ }
+    var lang = saved || ((navigator.language || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en');
+    var notes = null;
+
+    function apply() {
+      document.documentElement.lang = lang;
+      document.title = lang === 'ru' ? 'FOE Reborn — скачать лаунчер' : 'FOE Reborn — download the launcher';
+      var nodes = document.querySelectorAll('[data-ru]');
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].innerHTML = nodes[i].getAttribute('data-' + lang);
+      }
+      document.getElementById('lang').textContent = lang === 'ru' ? 'EN' : 'RU';
+      showNotes();
+    }
+
+    function showNotes() {
+      if (!notes || !notes.entries || !notes.entries.length) { return; }
+      var entry = notes.entries[0];
+      var lines = (entry[lang] && entry[lang].length) ? entry[lang] : (entry.ru && entry.ru.length ? entry.ru : entry.en || []);
+      document.getElementById('notes-version').textContent = entry.version + (entry.date ? ' · ' + entry.date.substring(0, 10) : '');
+      var list = document.getElementById('notes-list');
+      list.innerHTML = '';
+      for (var i = 0; i < lines.length; i++) {
+        var li = document.createElement('li');
+        li.textContent = lines[i];
+        list.appendChild(li);
+      }
+      document.getElementById('notes-card').hidden = false;
+    }
+
+    document.getElementById('lang').addEventListener('click', function () {
+      lang = lang === 'ru' ? 'en' : 'ru';
+      try { localStorage.setItem('lang', lang); } catch (e) { /* private mode */ }
+      apply();
+    });
+
+    // The query string bypasses the GitHub Pages CDN cache (about ten minutes).
+    function getJson(file) {
+      return fetch('downloads/' + file + '?t=' + Date.now(), { cache: 'no-store' }).then(function (response) {
+        if (!response.ok) { throw new Error('HTTP ' + response.status); }
+        return response.json();
+      });
+    }
+
+    function showVersion(file, nodeId) {
+      var node = document.getElementById(nodeId);
+      getJson(file).then(function (data) {
+        if (data && data.version) { node.textContent = data.version; }
+      }).catch(function () {
+        // Not published yet or offline: keep the dash.
+        node.textContent = '—';
+      });
+    }
+
+    showVersion('version.json', 'game-version');
+    showVersion('test/version.json', 'test-version');
+    showVersion('launcher-version.json', 'launcher-version');
+    getJson('notes.json').then(function (data) { notes = data; showNotes(); }).catch(function () {});
+    apply();
+  })();
+</script>
+</body>
+</html>

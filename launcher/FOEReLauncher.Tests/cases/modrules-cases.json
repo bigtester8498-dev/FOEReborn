@@ -1,0 +1,6886 @@
+{
+  "format": 1,
+  "about": "Shared cases of the mod rules: run by the launcher (ModRulesCasesTests) and by the game (EditMode L1bModRulesCases). Inputs from tools/make_modrules_cases.py; answers checked by both.",
+  "gameVersion": "1.0.2",
+  "cases": [
+    {
+      "name": "content_only",
+      "note": "no mods: classic and reborn load, reborn after classic",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "mod_off_by_default",
+      "note": "a new mod starts disabled",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "mod_enabled",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "no_selection_enables_all",
+      "note": "tools and tests: settings null = every package on",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": null,
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b"
+        ],
+        "enabled": null,
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "default_enabled_no_choice",
+      "note": "defaultEnabled turns on without a choice",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "defaultEnabled": true
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "d"
+        ],
+        "enabled": [
+          "d"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "default_enabled_player_off",
+      "note": "a player who switched it off keeps it off",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "defaultEnabled": true
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [
+          "d"
+        ],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "default_enabled_player_on",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "defaultEnabled": true
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "d"
+        ],
+        "disabled": [],
+        "order": [
+          "d",
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "d",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "d"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "default_enabled_not_applied",
+      "note": "scripted runs (-autotest) do not apply defaults",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "defaultEnabled": true
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": false,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "default_enabled_requires_disabled",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "defaultEnabled": true,
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [
+          "a"
+        ],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [
+        "d"
+      ],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "DependencyInactive",
+            "reasonKey": "depoff",
+            "code": false,
+            "reason": "requires 'Mod a' (a), which is disabled: enable it too",
+            "reasonRu": "требует «Mod a» (a), а он выключен: включите и его",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "d"
+        ],
+        "toEnable": {
+          "d": [
+            "a"
+          ]
+        },
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "requires_classic_ok",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "classic",
+              "version": ">=1.0.2"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "requires_classic_too_new",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "classic",
+              "version": ">=2.0"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "WrongVersion",
+            "reasonKey": "version",
+            "code": false,
+            "reason": "requires 'classic' >=2.0, found 1.0.2",
+            "reasonRu": "требует «classic» >=2.0, найдена версия 1.0.2",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "missing_dependency",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "zzz",
+              "version": "^1.0"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "MissingDependency",
+            "reasonKey": "missing",
+            "code": false,
+            "reason": "requires 'zzz ^1.0', which is not installed",
+            "reasonRu": "требует «zzz ^1.0», а он не установлен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "missing_dependency_no_range",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "zzz"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "MissingDependency",
+            "reasonKey": "missing",
+            "code": false,
+            "reason": "requires 'zzz', which is not installed",
+            "reasonRu": "требует «zzz», а он не установлен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "dependency_disabled",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [
+        "a"
+      ],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "DependencyInactive",
+            "reasonKey": "depoff",
+            "code": false,
+            "reason": "requires 'Mod b' (b), which is disabled: enable it too",
+            "reasonRu": "требует «Mod b» (b), а он выключен: включите и его",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {
+          "a": [
+            "b"
+          ]
+        },
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "dependency_broken",
+      "note": "the reason of a quotes the reason of b",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "one"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "DependencyInactive",
+            "reasonKey": "depfailed",
+            "code": false,
+            "reason": "requires 'b', which failed to load (version 'one' is not numbers separated by dots (1.0.2))",
+            "reasonRu": "требует «b», а он не загрузился (version 'one' is not numbers separated by dots (1.0.2))",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "version 'one' is not numbers separated by dots (1.0.2)",
+            "reasonRu": "version 'one' is not numbers separated by dots (1.0.2)",
+            "issues": [
+              "error: version 'one' is not numbers separated by dots (1.0.2)"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "chain_of_three_on",
+      "note": "requirements load first whatever the player's order",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a",
+              "version": ">=1.0"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b",
+              "version": "^1"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "c",
+          "b",
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "c",
+          "b",
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [
+        "c"
+      ],
+      "toDisable": [
+        "a"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b",
+          "c"
+        ],
+        "enabled": [
+          "c",
+          "b",
+          "a"
+        ],
+        "toEnable": {
+          "c": []
+        },
+        "toDisable": {
+          "a": [
+            "b",
+            "c"
+          ]
+        }
+      }
+    },
+    {
+      "name": "chain_of_three_middle_off",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a",
+              "version": ">=1.0"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b",
+              "version": "^1"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "c"
+        ],
+        "disabled": [
+          "b"
+        ],
+        "order": [
+          "a",
+          "c"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [
+        "c"
+      ],
+      "toDisable": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "DependencyInactive",
+            "reasonKey": "depoff",
+            "code": false,
+            "reason": "requires 'Mod b' (b), which is disabled: enable it too",
+            "reasonRu": "требует «Mod b» (b), а он выключен: включите и его",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "c"
+        ],
+        "toEnable": {
+          "c": [
+            "b"
+          ]
+        },
+        "toDisable": {
+          "a": [],
+          "b": [
+            "c"
+          ]
+        }
+      }
+    },
+    {
+      "name": "chain_of_three_bottom_wrong_version",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "0.9"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a",
+              "version": ">=1.0"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b",
+              "version": "^1"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "WrongVersion",
+            "reasonKey": "version",
+            "code": false,
+            "reason": "requires 'a' >=1.0, found 0.9",
+            "reasonRu": "требует «a» >=1.0, найдена версия 0.9",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "DependencyInactive",
+            "reasonKey": "depfailed",
+            "code": false,
+            "reason": "requires 'b', which failed to load (requires 'a' >=1.0, found 0.9)",
+            "reasonRu": "требует «b», а он не загрузился (требует «a» >=1.0, найдена версия 0.9)",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "chain_of_three_cascade_from_nothing",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a",
+              "version": ">=1.0"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b",
+              "version": "^1"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [
+        "c",
+        "b",
+        "a"
+      ],
+      "toDisable": [
+        "a"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {
+          "c": [
+            "a",
+            "b"
+          ],
+          "b": [
+            "a"
+          ],
+          "a": []
+        },
+        "toDisable": {
+          "a": []
+        }
+      }
+    },
+    {
+      "name": "cycle_requires",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with b",
+            "reasonRu": "цикл порядка загрузки с b",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with a",
+            "reasonRu": "цикл порядка загрузки с a",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "cycle_load_after",
+      "note": "the cycle is skipped, c still loads",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "loadAfter": [
+            "b"
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "loadAfter": [
+            "a"
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with b",
+            "reasonRu": "цикл порядка загрузки с b",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with a",
+            "reasonRu": "цикл порядка загрузки с a",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "c"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "cycle_of_three_mixed",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "loadAfter": [
+            "c"
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "loadBefore": [
+            "x"
+          ],
+          "loadAfter": [
+            "b"
+          ]
+        },
+        "Mods/x/package.json": {
+          "id": "x",
+          "name": "Mod x",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c",
+          "x"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b",
+          "c",
+          "x"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with b, c, x",
+            "reasonRu": "цикл порядка загрузки с b, c, x",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with a, c, x",
+            "reasonRu": "цикл порядка загрузки с a, c, x",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with a, b, x",
+            "reasonRu": "цикл порядка загрузки с a, b, x",
+            "issues": []
+          },
+          {
+            "dir": "Mods/x",
+            "id": "x",
+            "state": "Cycle",
+            "reasonKey": "cycle",
+            "code": false,
+            "reason": "load order cycle with a, b, c",
+            "reasonRu": "цикл порядка загрузки с a, b, c",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c",
+          "x"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "load_after",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "loadAfter": [
+            "b"
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "b",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "load_before",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "loadBefore": [
+            "a"
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "b",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "load_after_unknown_ignored",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "loadAfter": [
+            "nothere",
+            "classic"
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "player_order_tie_break",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "disabled": [],
+        "order": [
+          "c",
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "c",
+          "a",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "order_partial",
+      "note": "mods missing from the order follow in discovery order",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "disabled": [],
+        "order": [
+          "c"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "c",
+          "a",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_later_loses",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Incompatible",
+            "reasonKey": "incompatible",
+            "code": false,
+            "reason": "incompatible with 'Mod a' (a 1.0.0)",
+            "reasonRu": "несовместим с «Mod a» (a 1.0.0)",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_declarer_later_loses",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "b",
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Incompatible",
+            "reasonKey": "incompatible",
+            "code": false,
+            "reason": "incompatible with 'Mod b' (b 1.0.0)",
+            "reasonRu": "несовместим с «Mod b» (b 1.0.0)",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_with_core",
+      "note": "a core package always wins",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "reborn"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Incompatible",
+            "reasonKey": "incompatible",
+            "code": false,
+            "reason": "incompatible with 'Reborn texts' (reborn 0.1.0)",
+            "reasonRu": "несовместим с «Reborn texts» (reborn 0.1.0)",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_range_not_matching",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b",
+              "version": "<1.0"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_with_disabled",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "incompatible_drop_leaves_user",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Incompatible",
+            "reasonKey": "incompatible",
+            "code": false,
+            "reason": "incompatible with 'Mod a' (a 1.0.0)",
+            "reasonRu": "несовместим с «Mod a» (a 1.0.0)",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "DependencyInactive",
+            "reasonKey": "depnotloaded",
+            "code": false,
+            "reason": "requires 'b', which is not loaded (incompatible with 'Mod a' (a 1.0.0))",
+            "reasonRu": "требует «b», а он не загружен (несовместим с «Mod a» (a 1.0.0))",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "group_folder",
+      "note": "Mods/examples/* is one level of group folder; discovery is by folder name",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/z/package.json": {
+          "id": "z",
+          "name": "Mod z",
+          "version": "1.0.0"
+        },
+        "Mods/examples/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/examples/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "z"
+        ],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/examples/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/examples/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/z",
+            "id": "z",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b",
+          "z"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "z"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "group_two_levels_ignored",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/g1/g2/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        }
+      },
+      "settings": null,
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": null,
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "content_group_not_scanned",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Content/extra/sub/package.json": {
+          "id": "sub",
+          "name": "Mod sub",
+          "version": "1.0.0"
+        }
+      },
+      "settings": null,
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": null,
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "dot_folder_ignored",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/.hidden/package.json": {
+          "id": "hidden",
+          "name": "Mod hidden",
+          "version": "1.0.0"
+        }
+      },
+      "settings": null,
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": null,
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "duplicate_id",
+      "note": "the second folder is skipped",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a1/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/a2/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "2.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a1",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a2",
+            "id": "a",
+            "state": "Duplicate",
+            "reasonKey": "duplicate",
+            "code": false,
+            "reason": "duplicate package id 'a' (also in Mods/a1), this copy skipped",
+            "reasonRu": "повтор id пакета «a» (есть и в Mods/a1), эта копия пропущена",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_syntax",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/bad/package.json": "{ \"id\": \"bad\", "
+      },
+      "settings": {
+        "enabled": [
+          "bad"
+        ],
+        "disabled": [],
+        "order": [
+          "bad"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/bad",
+            "id": "bad",
+            "state": "Invalid",
+            "reasonKey": "unreadable",
+            "code": false,
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "bad"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_empty_file",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/bad/package.json": ""
+      },
+      "settings": {
+        "enabled": [
+          "bad"
+        ],
+        "disabled": [],
+        "order": [
+          "bad"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/bad",
+            "id": "bad",
+            "state": "Invalid",
+            "reasonKey": "unreadable",
+            "code": false,
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "bad"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_json_null",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/bad/package.json": "null"
+      },
+      "settings": {
+        "enabled": [
+          "bad"
+        ],
+        "disabled": [],
+        "order": [
+          "bad"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/bad",
+            "id": "bad",
+            "state": "Invalid",
+            "reasonKey": "unreadable",
+            "code": false,
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "bad"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_not_object",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/bad/package.json": "[1, 2]"
+      },
+      "settings": {
+        "enabled": [
+          "bad"
+        ],
+        "disabled": [],
+        "order": [
+          "bad"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/bad",
+            "id": "bad",
+            "state": "Invalid",
+            "reasonKey": "unreadable",
+            "code": false,
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "bad"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_wrong_type",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/bad/package.json": {
+          "id": "bad",
+          "version": "1.0",
+          "requires": "classic"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "bad"
+        ],
+        "disabled": [],
+        "order": [
+          "bad"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/bad",
+            "id": "bad",
+            "state": "Invalid",
+            "reasonKey": "unreadable",
+            "code": false,
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "bad"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_no_id",
+      "note": "the folder name becomes the id",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/noid/package.json": {
+          "version": "1.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "noid"
+        ],
+        "disabled": [],
+        "order": [
+          "noid"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/noid",
+            "id": "noid",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "the manifest has no \"id\"",
+            "reasonRu": "the manifest has no \"id\"",
+            "issues": [
+              "error: the manifest has no \"id\""
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "noid"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_bad_id",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/badid/package.json": {
+          "id": "Bad Id",
+          "name": "Mod Bad Id",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "Bad Id"
+        ],
+        "disabled": [],
+        "order": [
+          "Bad Id"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/badid",
+            "id": "Bad Id",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "id 'Bad Id' may only have lower-case letters, digits, '_', '.' and '-'",
+            "reasonRu": "id 'Bad Id' may only have lower-case letters, digits, '_', '.' and '-'",
+            "issues": [
+              "error: id 'Bad Id' may only have lower-case letters, digits, '_', '.' and '-'"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "Bad Id"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_no_version",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "the manifest has no \"version\"",
+            "reasonRu": "the manifest has no \"version\"",
+            "issues": [
+              "error: the manifest has no \"version\""
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_bad_version",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.a"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "version '1.a' is not numbers separated by dots (1.0.2)",
+            "reasonRu": "version '1.a' is not numbers separated by dots (1.0.2)",
+            "issues": [
+              "error: version '1.a' is not numbers separated by dots (1.0.2)"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_requires_no_id",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "version": "1.0"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "a \"requires\" entry has no id",
+            "reasonRu": "a \"requires\" entry has no id",
+            "issues": [
+              "error: a \"requires\" entry has no id"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_requires_self",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "the package requires itself",
+            "reasonRu": "the package requires itself",
+            "issues": [
+              "error: the package requires itself"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_requires_range",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "classic",
+              "version": ">>1"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "version range '>>1' of 'classic' cannot be read",
+            "reasonRu": "version range '>>1' of 'classic' cannot be read",
+            "issues": [
+              "error: version range '>>1' of 'classic' cannot be read"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_incompatible_range",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "incompatible": [
+            {
+              "id": "b",
+              "version": "1.0 ||"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "version range '1.0 ||' of incompatible 'b' cannot be read",
+            "reasonRu": "version range '1.0 ||' of incompatible 'b' cannot be read",
+            "issues": [
+              "error: version range '1.0 ||' of incompatible 'b' cannot be read"
+            ]
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_game_range",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "game": "abc"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "game version range 'abc' cannot be read",
+            "reasonRu": "game version range 'abc' cannot be read",
+            "issues": [
+              "error: game version range 'abc' cannot be read"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "broken_two_errors",
+      "note": "the first error is the reason, every issue is listed",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/x/package.json": {
+          "id": "X",
+          "version": "v1"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "X"
+        ],
+        "disabled": [],
+        "order": [
+          "X"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/x",
+            "id": "X",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": false,
+            "reason": "id 'X' may only have lower-case letters, digits, '_', '.' and '-'",
+            "reasonRu": "id 'X' may only have lower-case letters, digits, '_', '.' and '-'",
+            "issues": [
+              "error: id 'X' may only have lower-case letters, digits, '_', '.' and '-'",
+              "error: version 'v1' is not numbers separated by dots (1.0.2)"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "X"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "warning_game_range",
+      "note": "a warning, the mod still loads",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "game": "<1.0"
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": [
+              "warning: made for game version <1.0, this is 1.0.2"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "warning_unknown_field",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "tags": [
+            "x"
+          ],
+          "url": "http://e",
+          "homepage": "h",
+          "colour": 1
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": [
+              "warning: unknown manifest field \"homepage\" ignored",
+              "warning: unknown manifest field \"colour\" ignored"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "code_mod_ok",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "assemblies": [
+            "Code/A.dll"
+          ]
+        },
+        "Mods/a/Code/A.dll": "MZ"
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": true,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "code_mod_missing_dll",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "assemblies": [
+            "Code/A.dll"
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": true,
+            "reason": "assembly 'Code/A.dll' not found in the package (is the mod built?)",
+            "reasonRu": "assembly 'Code/A.dll' not found in the package (is the mod built?)",
+            "issues": [
+              "error: assembly 'Code/A.dll' not found in the package (is the mod built?)"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "code_mod_dll_escape",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "assemblies": [
+            "../A.dll"
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Invalid",
+            "reasonKey": "manifest",
+            "code": true,
+            "reason": "assembly path '../A.dll' must be relative to the package folder",
+            "reasonRu": "assembly path '../A.dll' must be relative to the package folder",
+            "issues": [
+              "error: assembly path '../A.dll' must be relative to the package folder"
+            ]
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "numbers_for_text",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/n/package.json": {
+          "id": "n",
+          "version": 2,
+          "name": 5
+        }
+      },
+      "settings": {
+        "enabled": [
+          "n"
+        ],
+        "disabled": [],
+        "order": [
+          "n"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/n",
+            "id": "n",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "n"
+        ],
+        "enabled": [
+          "n"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "key_case",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/k/package.json": {
+          "ID": "k",
+          "Version": "1.0.0",
+          "Requires": [
+            {
+              "Id": "classic"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "k"
+        ],
+        "disabled": [],
+        "order": [
+          "k"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/k",
+            "id": "k",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "k"
+        ],
+        "enabled": [
+          "k"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "cascade_enable_skips_core_and_missing",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "classic"
+            },
+            {
+              "id": "zzz"
+            },
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0"
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [
+        "a"
+      ],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {
+          "a": [
+            "b"
+          ]
+        },
+        "toDisable": {}
+      }
+    },
+    {
+      "name": "cascade_disable_ignores_off_users",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "disabled": [
+          "c"
+        ],
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [
+        "a"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b"
+        ],
+        "enabled": [
+          "a",
+          "b"
+        ],
+        "toEnable": {},
+        "toDisable": {
+          "a": [
+            "b"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cascade_diamond",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0"
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        "Mods/c/package.json": {
+          "id": "c",
+          "name": "Mod c",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        "Mods/d/package.json": {
+          "id": "d",
+          "name": "Mod d",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            },
+            {
+              "id": "c"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "disabled": [],
+        "order": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [
+        "d"
+      ],
+      "toDisable": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/c",
+            "id": "c",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/d",
+            "id": "d",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "enabled": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "toEnable": {
+          "d": []
+        },
+        "toDisable": {
+          "a": [
+            "b",
+            "c",
+            "d"
+          ],
+          "b": [
+            "d"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cascade_enable_cycle",
+      "note": "",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        "Mods/b/package.json": {
+          "id": "b",
+          "name": "Mod b",
+          "version": "1.0.0",
+          "requires": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "enabled": [],
+        "disabled": [],
+        "order": []
+      },
+      "defaults": true,
+      "toEnable": [
+        "a"
+      ],
+      "toDisable": [
+        "a"
+      ],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          },
+          {
+            "dir": "Mods/b",
+            "id": "b",
+            "state": "Disabled",
+            "reasonKey": "disabled",
+            "code": false,
+            "reason": "disabled",
+            "reasonRu": "выключен",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn"
+        ],
+        "enabled": [],
+        "toEnable": {
+          "a": [
+            "b"
+          ]
+        },
+        "toDisable": {
+          "a": []
+        }
+      }
+    }
+  ],
+  "versions": [
+    {
+      "version": "1.0.2",
+      "range": "",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": "*",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": "1.0.2",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": "1.0",
+      "satisfies": false
+    },
+    {
+      "version": "1.0",
+      "range": "1.0.0",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": "=1.0.2",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": ">=1.0.2",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.1",
+      "range": ">=1.0.2",
+      "satisfies": false
+    },
+    {
+      "version": "1.0.2",
+      "range": ">1.0",
+      "satisfies": true
+    },
+    {
+      "version": "1.0",
+      "range": ">1.0",
+      "satisfies": false
+    },
+    {
+      "version": "2.0",
+      "range": "<=2",
+      "satisfies": true
+    },
+    {
+      "version": "2.0.1",
+      "range": "<=2",
+      "satisfies": false
+    },
+    {
+      "version": "1.9.9",
+      "range": "<2",
+      "satisfies": true
+    },
+    {
+      "version": "2",
+      "range": "<2",
+      "satisfies": false
+    },
+    {
+      "version": "1.5.0",
+      "range": "^1.2",
+      "satisfies": true
+    },
+    {
+      "version": "2.0.0",
+      "range": "^1.2",
+      "satisfies": false
+    },
+    {
+      "version": "0.2.5",
+      "range": "^0.2.3",
+      "satisfies": true
+    },
+    {
+      "version": "0.3.0",
+      "range": "^0.2.3",
+      "satisfies": false
+    },
+    {
+      "version": "1.2.9",
+      "range": "~1.2",
+      "satisfies": true
+    },
+    {
+      "version": "1.3.0",
+      "range": "~1.2",
+      "satisfies": false
+    },
+    {
+      "version": "1.9",
+      "range": "~1",
+      "satisfies": true
+    },
+    {
+      "version": "2.0",
+      "range": "~1",
+      "satisfies": false
+    },
+    {
+      "version": "1.4.2",
+      "range": "1.x",
+      "satisfies": true
+    },
+    {
+      "version": "2.0",
+      "range": "1.x",
+      "satisfies": false
+    },
+    {
+      "version": "1.2.7",
+      "range": "1.2.*",
+      "satisfies": true
+    },
+    {
+      "version": "1.3",
+      "range": "1.2.*",
+      "satisfies": false
+    },
+    {
+      "version": "7.0",
+      "range": "x",
+      "satisfies": true
+    },
+    {
+      "version": "1.5",
+      "range": ">=1.0 <2.0",
+      "satisfies": true
+    },
+    {
+      "version": "2.5",
+      "range": ">=1.0 <2.0",
+      "satisfies": false
+    },
+    {
+      "version": "1.5",
+      "range": ">= 1.0 < 2",
+      "satisfies": true
+    },
+    {
+      "version": "3.1",
+      "range": "<1 || >=3",
+      "satisfies": true
+    },
+    {
+      "version": "2.0",
+      "range": "<1 || >=3",
+      "satisfies": false
+    },
+    {
+      "version": "1.0.0-beta",
+      "range": "1.0.0",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.0+build",
+      "range": ">=1.0.0",
+      "satisfies": true
+    },
+    {
+      "version": "1.0.2",
+      "range": ">=1.0.2,<2",
+      "satisfies": true
+    }
+  ],
+  "ranges": [
+    {
+      "range": "",
+      "valid": true
+    },
+    {
+      "range": "*",
+      "valid": true
+    },
+    {
+      "range": ">=1.0.2",
+      "valid": true
+    },
+    {
+      "range": "^1",
+      "valid": true
+    },
+    {
+      "range": "~1.2.3",
+      "valid": true
+    },
+    {
+      "range": "1.x",
+      "valid": true
+    },
+    {
+      "range": "1.2.*",
+      "valid": true
+    },
+    {
+      "range": ">= 1.0 <2",
+      "valid": true
+    },
+    {
+      "range": "1 || 2",
+      "valid": true
+    },
+    {
+      "range": "1.0.0-beta",
+      "valid": true
+    },
+    {
+      "range": ">>1",
+      "valid": false
+    },
+    {
+      "range": "abc",
+      "valid": false
+    },
+    {
+      "range": "1.0 ||",
+      "valid": false
+    },
+    {
+      "range": "v1",
+      "valid": false
+    },
+    {
+      "range": ">=",
+      "valid": false
+    },
+    {
+      "range": "1..2",
+      "valid": false
+    },
+    {
+      "range": "=> 1",
+      "valid": false
+    }
+  ],
+  "isVersion": [
+    {
+      "version": "1",
+      "valid": true
+    },
+    {
+      "version": "1.0.2",
+      "valid": true
+    },
+    {
+      "version": "10.20.30.40",
+      "valid": true
+    },
+    {
+      "version": "1.0.0-rc.1",
+      "valid": true
+    },
+    {
+      "version": "1.0+b",
+      "valid": true
+    },
+    {
+      "version": "1.a",
+      "valid": false
+    },
+    {
+      "version": "v1",
+      "valid": false
+    },
+    {
+      "version": "",
+      "valid": false
+    },
+    {
+      "version": "1.",
+      "valid": false
+    },
+    {
+      "version": " 1.0 ",
+      "valid": true
+    }
+  ],
+  "compare": [
+    {
+      "a": "1.0",
+      "b": "1.0.0",
+      "result": 0
+    },
+    {
+      "a": "1.2",
+      "b": "1.10",
+      "result": -1
+    },
+    {
+      "a": "2",
+      "b": "1.9.9",
+      "result": 1
+    },
+    {
+      "a": "1.0-x",
+      "b": "1.0",
+      "result": 0
+    },
+    {
+      "a": "",
+      "b": "0",
+      "result": 0
+    }
+  ]
+}
+

@@ -1,0 +1,59 @@
+name: promote-release
+
+# Moves a game release from the test channel to production: `tools/publish.py upload` makes a
+# test build a prerelease (downloads/test/); this workflow clears the flag, so publish-pages
+# puts the release's manifest into downloads/.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to promote (for example v0.1.539). Empty = newest v0.1.* prerelease'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  promote:
+    name: Promote a release to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve the tag
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="$INPUT_TAG"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh release list --repo "$REPO" --limit 200 --json tagName,isPrerelease \
+              --jq '[.[] | select(.tagName | test("^v0[.]1[.][0-9]+$")) | select(.isPrerelease)]
+                    | sort_by(.tagName | ltrimstr("v0.1.") | tonumber) | map(.tagName) | last // empty')"
+            if [ -z "$TAG" ]; then
+              echo "::error::no v0.1.* prerelease found, nothing to promote"
+              exit 1
+            fi
+          fi
+          gh release view "$TAG" --repo "$REPO" --json tagName >/dev/null
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Promote
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" --repo "$REPO" --prerelease=false --latest
+          echo "### Promoted to production: $TAG" >> "$GITHUB_STEP_SUMMARY"
+
+      # The release edit fires a release event too; the explicit run makes sure the site moves.
+      - name: Republish Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: gh workflow run publish-pages.yml --repo "$REPO" --ref main || echo "::warning::could not trigger publish-pages"

@@ -1,0 +1,129 @@
+name: publish-pages
+
+# Builds the GitHub Pages site: the download page from site/ and, for each channel, the small
+# JSON files of its game release. The game packs stay release assets (the manifest holds their
+# absolute urls), so the site stays far below the 1 GB Pages limit.
+#   downloads/        newest stable release v0.1.N: manifest.json, version.json, notes.json
+#   downloads/test/   newest release of any kind (prereleases included)
+#   downloads/FOEReLauncher.exe, launcher-version.json   from the rolling launcher-latest release
+#   downloads/mods/catalog.json   from the newest mods-* release (`tools/publish.py mods` + `upload`)
+# Game releases are made by `tools/publish.py upload` (prerelease = test).
+on:
+  workflow_run:
+    workflows: ["launcher-build"]
+    types: [completed]
+  release:
+    types: [published, released, edited]
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/publish-pages.yml'
+  workflow_dispatch:
+
+# The site is the gh-pages branch (Pages source "Deploy from a branch", gh-pages, /): one commit, replaced
+# by every run. Pushing that branch needs only the workflow token.
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish site and channel files to GitHub Pages
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble _site
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site/downloads/test
+          cp -R site/. _site/
+
+      - name: Resolve release channels
+        id: channels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          releases="$(mktemp)"
+          gh release list --repo "$REPO" --limit 200 --json tagName,isPrerelease > "$releases"
+          # Numeric sort on N: v0.1.10 is newer than v0.1.9.
+          PROD_TAG="$(jq -r '[.[] | select(.tagName | test("^v0[.]1[.][0-9]+$")) | select(.isPrerelease | not)]
+                             | sort_by(.tagName | ltrimstr("v0.1.") | tonumber) | map(.tagName) | last // empty' "$releases")"
+          TEST_TAG="$(jq -r '[.[] | select(.tagName | test("^v0[.]1[.][0-9]+$"))]
+                             | sort_by(.tagName | ltrimstr("v0.1.") | tonumber) | map(.tagName) | last // empty' "$releases")"
+          # mods-YYYYMMDD-HHMMSS sorts by name.
+          MODS_TAG="$(jq -r '[.[] | select(.tagName | test("^mods-[0-9]{8}-[0-9]{6}$")) | .tagName] | sort | last // empty' "$releases")"
+          echo "production: ${PROD_TAG:-none}"
+          echo "test:       ${TEST_TAG:-none}"
+          echo "mods:       ${MODS_TAG:-none}"
+          echo "prod_tag=$PROD_TAG" >> "$GITHUB_OUTPUT"
+          echo "test_tag=$TEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "mods_tag=$MODS_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch channel files and the launcher
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PROD_TAG: ${{ steps.channels.outputs.prod_tag }}
+          TEST_TAG: ${{ steps.channels.outputs.test_tag }}
+          MODS_TAG: ${{ steps.channels.outputs.mods_tag }}
+        run: |
+          set -uo pipefail
+          # The manifest is the same for both channels (pack urls are absolute); only the folder differs.
+          fetch_channel() {
+            tag="$1"
+            dir="$2"
+            mkdir -p "$dir"
+            for asset in manifest.json version.json notes.json; do
+              gh release download "$tag" --repo "$REPO" --pattern "$asset" --dir "$dir" --clobber \
+                || echo "::warning::asset $asset missing in release $tag"
+            done
+          }
+          if [ -n "$PROD_TAG" ]; then
+            fetch_channel "$PROD_TAG" _site/downloads
+          else
+            echo "::warning::no stable v0.1.* release, production channel is empty"
+          fi
+          if [ -n "$TEST_TAG" ]; then
+            fetch_channel "$TEST_TAG" _site/downloads/test
+          else
+            echo "::warning::no v0.1.* release, test channel is empty"
+          fi
+          if [ -n "$MODS_TAG" ]; then
+            mkdir -p _site/downloads/mods
+            gh release download "$MODS_TAG" --repo "$REPO" --pattern catalog.json --dir _site/downloads/mods --clobber               || echo "::warning::asset catalog.json missing in release $MODS_TAG"
+          else
+            echo "::warning::no mods-* release, the mod catalogue is empty"
+          fi
+          for asset in FOEReLauncher.exe launcher-version.json; do
+            gh release download launcher-latest --repo "$REPO" --pattern "$asset" --dir _site/downloads --clobber \
+              || echo "::warning::asset $asset missing in release launcher-latest"
+          done
+          ls -laR _site/downloads
+          du -sh _site
+
+      - name: Push the site to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd _site
+          # No Jekyll pass: the files are served as they are.
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Site $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages
+          echo "### Site published: https://${REPO%%/*}.github.io/${REPO#*/}/" >> "$GITHUB_STEP_SUMMARY"

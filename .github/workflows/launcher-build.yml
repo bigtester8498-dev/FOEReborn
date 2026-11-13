@@ -1,0 +1,99 @@
+name: launcher-build
+
+# Builds and tests the launcher and publishes it as the rolling release `launcher-latest`
+# (FOEReLauncher.exe + launcher-version.json). publish-pages copies both onto the site,
+# where running launchers find them and update themselves.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: launcher-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SOLUTION: launcher/FOEReLauncher.sln
+
+jobs:
+  build:
+    name: Build, test and publish the launcher
+    # The tests run net48 assemblies, a swap batch file and a local Python test server: Windows runner.
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history: the launcher version counts the commits that touched launcher/.
+          fetch-depth: 0
+
+      - name: Compute launcher version
+        run: |
+          set -euo pipefail
+          echo "LAUNCHER_VERSION=1.0.$(git rev-list --count HEAD -- launcher)" >> "$GITHUB_ENV"
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build
+        run: dotnet build "$SOLUTION" -c Release -p:Version=${LAUNCHER_VERSION}.0
+
+      - name: Test
+        run: dotnet test "$SOLUTION" -c Release --no-build
+
+      - name: Package exe and version file
+        run: |
+          set -euo pipefail
+          rm -rf package
+          mkdir -p package
+          cp launcher/FOEReLauncher/bin/Release/net48/FOEReLauncher.exe package/
+          sha="$(sha256sum package/FOEReLauncher.exe | cut -d ' ' -f 1)"
+          size="$(stat -c '%s' package/FOEReLauncher.exe)"
+          printf '{"version":"%s","builtAt":"%s","file":"FOEReLauncher.exe","sha256":"%s","size":%s}\n' \
+            "$LAUNCHER_VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sha" "$size" > package/launcher-version.json
+          cat package/launcher-version.json
+
+      - name: Upload launcher artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher
+          path: package/*
+          retention-days: 7
+
+      - name: Drop previous rolling release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete launcher-latest --yes || true
+          git push origin :refs/tags/launcher-latest || true
+
+      - name: Publish rolling launcher release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: launcher-latest
+          name: FOE Reborn Launcher ${{ env.LAUNCHER_VERSION }}
+          make_latest: 'false'
+          prerelease: false
+          body: |
+            Rolling release of the FOE Reborn launcher. Always the newest launcher build.
+
+            Version: ${{ env.LAUNCHER_VERSION }}
+          files: |
+            package/FOEReLauncher.exe
+            package/launcher-version.json
