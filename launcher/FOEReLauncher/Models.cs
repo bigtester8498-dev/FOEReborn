@@ -257,6 +257,76 @@ namespace FOEReLauncher
         }
     }
 
+    /// <summary>
+    /// The change history cut at the installed version: <see cref="New"/> holds the versions the player has not
+    /// installed yet, <see cref="Old"/> the installed one and everything before it. Both keep the order of the list.
+    /// </summary>
+    public sealed class NotesSplit
+    {
+        private NotesSplit(string installed, IList<PatchNote> newer, IList<PatchNote> older)
+        {
+            Installed = installed;
+            New = newer;
+            Old = older;
+        }
+
+        /// <summary>The installed version as given; empty when the game is not installed.</summary>
+        public string Installed { get; }
+
+        public bool HasInstalled => Installed.Length > 0;
+
+        public IList<PatchNote> New { get; }
+
+        public IList<PatchNote> Old { get; }
+
+        /// <summary>
+        /// Versions are compared as numbers (0.1.592 is newer than 0.1.589), so the cut works even when the
+        /// installed version is missing from the list or came from the other channel. With nothing installed every
+        /// entry is new. An entry whose version is not a number is new only when it stands above the installed
+        /// version in the list.
+        /// </summary>
+        public static NotesSplit Split(IEnumerable<PatchNote> notes, string? installed)
+        {
+            var current = installed?.Trim() ?? string.Empty;
+            var list = new List<PatchNote>(notes);
+            var newer = new List<PatchNote>();
+            var older = new List<PatchNote>();
+            if (current.Length == 0)
+            {
+                return new NotesSplit(string.Empty, list, older);
+            }
+
+            var currentParsed = LauncherService.TryParseVersion(current, out var currentVersion);
+            var installedIndex = list.FindIndex(n => SameVersion(n.Version, current));
+            for (var i = 0; i < list.Count; i++)
+            {
+                var note = list[i];
+                bool isNew;
+                if (currentParsed && LauncherService.TryParseVersion(note.Version, out var noteVersion))
+                {
+                    isNew = noteVersion > currentVersion;
+                }
+                else
+                {
+                    isNew = installedIndex >= 0 && i < installedIndex;
+                }
+
+                (isNew ? newer : older).Add(note);
+            }
+
+            return new NotesSplit(current, newer, older);
+        }
+
+        private static bool SameVersion(string a, string b) =>
+            string.Equals(TrimV(a), TrimV(b), StringComparison.OrdinalIgnoreCase);
+
+        private static string TrimV(string v)
+        {
+            var t = v.Trim();
+            return t.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? t.Substring(1) : t;
+        }
+    }
+
     /// <summary>downloads/launcher-version.json: the newest launcher build on the site.</summary>
     public sealed class LauncherVersionInfo
     {

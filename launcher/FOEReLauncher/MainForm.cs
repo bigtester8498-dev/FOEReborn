@@ -84,6 +84,9 @@ namespace FOEReLauncher
         private IList<PatchNote> _patchNotes = new List<PatchNote>();
         private readonly List<string> _whatsNewLines = new List<string>();
 
+        /// <summary>The installed version the notes were last split at; null before the first split.</summary>
+        private string? _notesInstalled;
+
         private ActionKind _action = ActionKind.None;
         private string _actionKey = "btn.checking";
         private bool _actionEnabled;
@@ -531,7 +534,16 @@ namespace FOEReLauncher
             var installed = _service.GetInstalled();
             _installedLabel.Text = Texts.T("installed", installed.Version.Length > 0 && _service.IsGameInstalled() ? installed.Version : Texts.T("none"));
             _availableLabel.Text = Texts.T("available", checking ? Texts.T("checking") : (_latest?.Version ?? Texts.T("dash")));
+
+            // An install, update or removal moves the line between new and installed notes.
+            if (_patchNotes.Count > 0 && !string.Equals(_notesInstalled, InstalledVersionForNotes(), StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyPatchNotes();
+            }
         }
+
+        /// <summary>The version the change history is cut at; empty while the game is not installed.</summary>
+        private string InstalledVersionForNotes() => _service.IsGameInstalled() ? _service.GetInstalled().Version : string.Empty;
 
         /// <summary>
         /// Derives the action button and the status line from what is on disk plus the last known remote
@@ -1123,6 +1135,8 @@ namespace FOEReLauncher
                 return;
             }
 
+            var split = NotesSplit.Split(_patchNotes, InstalledVersionForNotes());
+            _notesInstalled = split.Installed;
             var latest = _patchNotes[0];
             _whatsNewTitle.Text = Texts.T("whatsnew", latest.Version);
             _whatsNewLines.Clear();
@@ -1139,6 +1153,13 @@ namespace FOEReLauncher
             if (_whatsNewLines.Count == 0)
             {
                 _whatsNewLines.Add("• " + Texts.T("notes.tech"));
+            }
+
+            // The teaser shows the newest version only; say when more versions wait between it and the installed one.
+            var more = split.HasInstalled ? split.New.Count - 1 : 0;
+            if (more > 0)
+            {
+                _whatsNewLines.Add(more == 1 ? Texts.T("notes.more1") : Texts.T("notes.more", more));
             }
 
             SetWhatsNewVisible(true);
@@ -1158,7 +1179,7 @@ namespace FOEReLauncher
                 return;
             }
 
-            using (var dialog = new PatchNotesForm(_patchNotes))
+            using (var dialog = new PatchNotesForm(_patchNotes, InstalledVersionForNotes()))
             {
                 dialog.ShowDialog(this);
             }
@@ -1292,7 +1313,10 @@ namespace FOEReLauncher
         private readonly RichTextBox _text;
         private readonly Button _closeButton;
 
-        public PatchNotesForm(IEnumerable<PatchNote> notes)
+        /// <summary>Text colour of the versions the player has not installed yet and of their heading.</summary>
+        private static readonly Color NewColor = MainForm.Accent;
+
+        public PatchNotesForm(IEnumerable<PatchNote> notes, string? installedVersion = null)
         {
             Text = Texts.T("btn.notes");
             BackColor = MainForm.Background;
@@ -1316,9 +1340,9 @@ namespace FOEReLauncher
                 Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point),
                 ScrollBars = RichTextBoxScrollBars.Vertical,
                 DetectUrls = false,
-                TabStop = false,
-                Text = Render(notes)
+                TabStop = false
             };
+            Fill(_text, Render(NotesSplit.Split(notes, installedVersion)));
 
             _closeButton = MainForm.MakeButton(Texts.T("btn.close"), MainForm.Secondary, MainForm.SecondaryText, 9.75f, FontStyle.Regular);
             _closeButton.DialogResult = DialogResult.OK;
@@ -1338,26 +1362,116 @@ namespace FOEReLauncher
             LayoutUi();
         }
 
-        /// <summary>Flattens the history into "version — date" blocks separated by a blank line.</summary>
-        public static string Render(IEnumerable<PatchNote> notes)
+        /// <summary>How a piece of the history is drawn.</summary>
+        public enum PieceKind
         {
-            var sb = new StringBuilder();
-            foreach (var note in notes)
+            NewHeading,
+            NewVersion,
+            Divider,
+            Version,
+            Line,
+            Empty
+        }
+
+        /// <summary>
+        /// The history as styled lines: when a game is installed, the versions newer than it come first under a
+        /// "not installed yet" heading, then a divider with the installed version, then the installed one and older.
+        /// Without an installed game the list is plain, as every entry is new.
+        /// </summary>
+        public static IList<KeyValuePair<PieceKind, string>> Render(NotesSplit split)
+        {
+            var pieces = new List<KeyValuePair<PieceKind, string>>();
+            void Add(PieceKind kind, string text) => pieces.Add(new KeyValuePair<PieceKind, string>(kind, text));
+
+            void AddNote(PatchNote note, bool isNew)
             {
-                if (sb.Length > 0)
+                if (pieces.Count > 0)
                 {
-                    sb.AppendLine();
+                    Add(PieceKind.Empty, string.Empty);
                 }
 
                 var date = note.DisplayDate;
-                sb.AppendLine(string.IsNullOrEmpty(date) ? note.Version : note.Version + " — " + date);
+                Add(isNew ? PieceKind.NewVersion : PieceKind.Version, string.IsNullOrEmpty(date) ? note.Version : note.Version + " — " + date);
                 foreach (var line in note.Lines(Texts.Language))
                 {
-                    sb.AppendLine("• " + line);
+                    Add(PieceKind.Line, "• " + line);
                 }
             }
 
-            return sb.Length == 0 ? Texts.T("notes.none") : sb.ToString().TrimEnd();
+            if (!split.HasInstalled)
+            {
+                foreach (var note in split.New)
+                {
+                    AddNote(note, false);
+                }
+            }
+            else
+            {
+                if (split.New.Count > 0)
+                {
+                    Add(PieceKind.NewHeading, split.New.Count == 1 ? Texts.T("notes.new1") : Texts.T("notes.new", split.New.Count));
+                    foreach (var note in split.New)
+                    {
+                        AddNote(note, true);
+                    }
+
+                    Add(PieceKind.Empty, string.Empty);
+                    Add(PieceKind.Divider, "——— " + Texts.T("notes.installed", split.Installed) + " ———");
+                }
+
+                foreach (var note in split.Old)
+                {
+                    AddNote(note, false);
+                }
+            }
+
+            if (pieces.Count == 0)
+            {
+                Add(PieceKind.Line, Texts.T("notes.none"));
+            }
+
+            return pieces;
+        }
+
+        private static void Fill(RichTextBox box, IList<KeyValuePair<PieceKind, string>> pieces)
+        {
+            var regular = box.Font;
+            // The box keeps the formatting as RTF, so the bold font is not needed after the fill.
+            using var bold = new Font(regular, FontStyle.Bold);
+            for (var i = 0; i < pieces.Count; i++)
+            {
+                var kind = pieces[i].Key;
+                box.SelectionStart = box.TextLength;
+                box.SelectionLength = 0;
+                switch (kind)
+                {
+                    case PieceKind.NewHeading:
+                        box.SelectionFont = bold;
+                        box.SelectionColor = NewColor;
+                        break;
+                    case PieceKind.NewVersion:
+                        box.SelectionFont = bold;
+                        box.SelectionColor = NewColor;
+                        break;
+                    case PieceKind.Divider:
+                        box.SelectionFont = regular;
+                        box.SelectionColor = MainForm.StatusColor;
+                        break;
+                    case PieceKind.Version:
+                        box.SelectionFont = bold;
+                        box.SelectionColor = MainForm.BodyColor;
+                        break;
+                    default:
+                        box.SelectionFont = regular;
+                        box.SelectionColor = MainForm.BodyColor;
+                        break;
+                }
+
+                box.AppendText(i + 1 < pieces.Count ? pieces[i].Value + "\n" : pieces[i].Value);
+            }
+
+            box.SelectionStart = 0;
+            box.SelectionLength = 0;
         }
 
         private void LayoutUi()

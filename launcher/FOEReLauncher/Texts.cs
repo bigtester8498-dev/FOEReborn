@@ -60,6 +60,11 @@ namespace FOEReLauncher
             ["whatsnew"] = new[] { "Что нового в {0}", "What's new in {0}" },
             ["notes.none"] = new[] { "Список изменений пока не опубликован.", "No change list is published yet." },
             ["notes.tech"] = new[] { "Технические изменения.", "Technical changes." },
+            ["notes.new"] = new[] { "Ещё не установлено (обновлений: {0})", "Not installed yet ({0} updates)" },
+            ["notes.new1"] = new[] { "Ещё не установлено (одно обновление)", "Not installed yet (1 update)" },
+            ["notes.installed"] = new[] { "Установлена: {0}", "Installed: {0}" },
+            ["notes.more"] = new[] { "+ ещё обновлений с вашей версии: {0}, см. «Что нового»", "+ {0} more updates since your version, see What's new" },
+            ["notes.more1"] = new[] { "+ ещё одно обновление с вашей версии, см. «Что нового»", "+ 1 more update since your version, see What's new" },
             ["launcher.version"] = new[] { "версия лаунчера: {0}", "launcher version: {0}" },
             ["st.blocked.running"] = new[] { "Игра запущена: установка, обновление и проверка файлов недоступны, пока она не закрыта.", "The game is running: install, update and file checks wait until it is closed." },
 
