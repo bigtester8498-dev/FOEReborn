@@ -65,6 +65,7 @@ namespace FOEReLauncher
         private readonly Label _whatsNewTitle;
         private readonly Label _whatsNewBody;
         private readonly Button _actionButton;
+        private readonly Button _gameUpdateButton;
         private readonly Button _launcherUpdateButton;
         private readonly Button _checkUpdatesButton;
         private readonly Button _verifyButton;
@@ -87,6 +88,7 @@ namespace FOEReLauncher
         private string _actionKey = "btn.checking";
         private bool _actionEnabled;
         private bool _busy;
+        private bool _gameUpdateShown; // not Button.Visible: that reads false while the Game tab is hidden
 
         /// <summary>The last status line as a key and its arguments, so a language switch can redraw it.</summary>
         private Func<string> _status = () => string.Empty;
@@ -147,6 +149,11 @@ namespace FOEReLauncher
             _actionButton.Enabled = false;
             _actionButton.Click += OnActionClick;
 
+            // An update never takes the Play button away: the installed version stays playable.
+            _gameUpdateButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _gameUpdateButton.Visible = false;
+            _gameUpdateButton.Click += OnGameUpdateClick;
+
             _launcherUpdateButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
             _launcherUpdateButton.Visible = false;
             _launcherUpdateButton.Click += OnLauncherUpdateClick;
@@ -187,7 +194,7 @@ namespace FOEReLauncher
             _gamePage.Controls.AddRange(new Control[]
             {
                 _installedLabel, _availableLabel, _whatsNewTitle, _whatsNewBody,
-                _actionButton, _launcherUpdateButton, _checkUpdatesButton, _verifyButton, _folderButton,
+                _actionButton, _gameUpdateButton, _launcherUpdateButton, _checkUpdatesButton, _verifyButton, _folderButton,
                 _patchNotesButton, _channelLabel, _channelCombo, _progress, _statusLabel
             });
             Controls.AddRange(new Control[] { _titleLabel, _languageButton, _tabs, _gamePage, _modsPage, _cataloguePage, _versionLabel });
@@ -299,6 +306,11 @@ namespace FOEReLauncher
                 _launcherUpdateButton.Text = Texts.T("btn.launcher", _launcherUpdate.Version);
             }
 
+            if (_latest != null)
+            {
+                _gameUpdateButton.Text = Texts.T("btn.gameupdate", _latest.Version);
+            }
+
             ApplyLocalLabels();
             ApplyActionButton();
             _statusLabel.Text = _status();
@@ -360,6 +372,11 @@ namespace FOEReLauncher
             _statusLabel.Bounds = new Rectangle(0, height - statusHeight, width, statusHeight);
 
             var stack = new List<Control> { _actionButton };
+            if (_gameUpdateShown)
+            {
+                stack.Add(_gameUpdateButton);
+            }
+
             if (_launcherUpdateButton.Visible)
             {
                 stack.Add(_launcherUpdateButton);
@@ -529,6 +546,7 @@ namespace FOEReLauncher
 
             if (_latest == null)
             {
+                SetGameUpdateVisible(false);
                 SetAction(isInstalled ? ActionKind.Play : ActionKind.Retry, isInstalled ? "btn.play" : "btn.retry");
                 if (_checkError != null)
                 {
@@ -542,6 +560,7 @@ namespace FOEReLauncher
             var latest = _latest;
             if (!isInstalled)
             {
+                SetGameUpdateVisible(false);
                 SetAction(ActionKind.Install, "btn.install");
                 SetStatus(() => Texts.T("st.notinstalled", LauncherService.FormatSize(SumPacks(latest), Texts.Language)));
             }
@@ -549,11 +568,14 @@ namespace FOEReLauncher
             // switching from testing back to release has to bring the stable build back.
             else if (!string.Equals(installed.Version, latest.Version, StringComparison.OrdinalIgnoreCase))
             {
-                SetAction(ActionKind.Update, "btn.update");
+                _gameUpdateButton.Text = Texts.T("btn.gameupdate", latest.Version);
+                SetGameUpdateVisible(true);
+                SetAction(ActionKind.Play, "btn.play");
                 SetStatus(_gameRunning ? (Func<string>)(() => Texts.T("st.differs.running")) : () => Texts.T("st.differs", latest.Version));
             }
             else
             {
+                SetGameUpdateVisible(false);
                 SetAction(ActionKind.Play, "btn.play");
                 SetStatus(_gameRunning ? "st.blocked.running" : "st.latest");
             }
@@ -650,7 +672,11 @@ namespace FOEReLauncher
             switch (_action)
             {
                 case ActionKind.Retry:
-                    await RunBusyAsync(RefreshAsync);
+                    await RunBusyAsync(async () =>
+                    {
+                        await RefreshAsync();
+                        await LoadPatchNotesAsync();
+                    });
                     break;
 
                 case ActionKind.Install:
@@ -671,6 +697,22 @@ namespace FOEReLauncher
 
                     break;
             }
+        }
+
+        private async void OnGameUpdateClick(object? sender, EventArgs e)
+        {
+            if (_gameRunning)
+            {
+                SetStatus("st.blocked.running");
+                return;
+            }
+
+            if (_busy || _latest == null)
+            {
+                return;
+            }
+
+            await RunBusyAsync(() => InstallAsync(verify: false));
         }
 
         private async void OnVerifyClick(object? sender, EventArgs e)
@@ -858,6 +900,7 @@ namespace FOEReLauncher
             var focused = ActiveControl;
             _busy = true;
             _actionButton.Enabled = false;
+            _gameUpdateButton.Enabled = false;
             _launcherUpdateButton.Enabled = false;
             _checkUpdatesButton.Enabled = false;
             _verifyButton.Enabled = false;
@@ -901,12 +944,14 @@ namespace FOEReLauncher
             {
                 _actionButton.Text = Texts.T("btn.running");
                 _actionButton.Enabled = false;
+                _gameUpdateButton.Enabled = false;
                 _verifyButton.Enabled = false;
                 return;
             }
 
             _actionButton.Text = Texts.T(_actionKey);
             _actionButton.Enabled = _actionEnabled && !_busy;
+            _gameUpdateButton.Enabled = !_busy;
         }
 
         private void SetStatus(string key) => SetStatus(() => Texts.T(key));
@@ -925,6 +970,18 @@ namespace FOEReLauncher
             }
 
             _progress.Visible = visible;
+            LayoutUi();
+        }
+
+        private void SetGameUpdateVisible(bool visible)
+        {
+            if (_gameUpdateShown == visible)
+            {
+                return;
+            }
+
+            _gameUpdateShown = visible;
+            _gameUpdateButton.Visible = visible;
             LayoutUi();
         }
 
