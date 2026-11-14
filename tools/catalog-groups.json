@@ -5,8 +5,8 @@
       "en": "FOE Reborn additions"
     },
     "description": {
-      "ru": "То, что FOE Reborn добавляет к оригинальной игре: свой дом, модули оружия, случайные встречи, вражду фракций и заклинание ледяного куба.",
-      "en": "What FOE Reborn adds to the original game: a home of your own, weapon attachments, random encounters, enemy infighting and the Ice cube spell."
+      "ru": "То, что FOE Reborn добавляет к оригинальной игре: свой дом, модули оружия, случайные встречи, вражду фракций, заклинание ледяного куба и новые способности.",
+      "en": "What FOE Reborn adds to the original game: a home of your own, weapon attachments, random encounters, enemy infighting, the Ice cube spell and new perks."
     },
     "order": 10,
     "mods": [
@@ -14,7 +14,9 @@
       "reborn_attachments",
       "reborn_encounters",
       "reborn_infighting",
-      "reborn_icecube"
+      "reborn_icecube",
+      "reborn_anvil",
+      "reborn_twofront"
     ]
   }
 }
