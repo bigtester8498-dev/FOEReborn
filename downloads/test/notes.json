@@ -1,0 +1,302 @@
+{
+  "entries": [
+    {
+      "version": "v0.1.628",
+      "date": "2026-11-14T11:39:27Z",
+      "ru": [
+        "Моды теперь могут менять бросок телекинезом (направление, удержание клавиши, дрожание предмета), давать перкам требования других перков и разрешать атаки гранатой и магией во время стрельбы. Без модов игра работает как раньше."
+      ],
+      "en": [
+        "Mods can now change the telekinesis throw (direction, holding the key, a trembling object), let perks require other perks, and allow grenade and magic attacks while shooting. Without mods the game works as before."
+      ]
+    },
+    {
+      "version": "v0.1.624",
+      "date": "2026-11-14T10:04:14Z",
+      "ru": [
+        "Ящики и предметы, лежащие на ящике, больше не висят в воздухе, когда ящик под ними исчезает, уменьшается или уезжает: они падают."
+      ],
+      "en": [
+        "Boxes and items lying on a box no longer hang in the air when the box under them disappears, shrinks or moves away: they fall."
+      ]
+    },
+    {
+      "version": "v0.1.617",
+      "date": "2026-11-14T05:04:32Z",
+      "ru": [
+        "Моды теперь могут рисовать картинки поверх предметов на карте, менять их кадры и задавать, как ящики скользят по полу. Обычные ящики двигаются как раньше."
+      ],
+      "en": [
+        "Mods can now draw pictures over map objects, switch their frames and set how boxes slide on the floor. Ordinary boxes move as before."
+      ]
+    },
+    {
+      "version": "v0.1.613",
+      "date": "2026-11-14T04:21:40Z",
+      "ru": [
+        "Моды больше не входят в саму игру. Дом, обвесы на оружие, случайные встречи в пути, вражда фракций и «Ледяной куб» теперь ставятся из каталога модов в лаунчере и по умолчанию выключены. Примеры модов для тех, кто делает моды, лежат в папке игры в архиве «Mod examples.zip»: нужные можно распаковать в папку Mods."
+      ],
+      "en": [
+        "Mods are no longer part of the game itself. The player home, weapon attachments, random encounters on the road, faction infighting and Ice cube now install from the launcher mod catalogue and are off by default. Example mods for mod makers are in the game folder in \"Mod examples.zip\": unpack the ones you want into the Mods folder."
+      ]
+    },
+    {
+      "version": "v0.1.612",
+      "date": "2026-11-14T04:09:59Z",
+      "ru": [
+        "Моды теперь могут добавлять свои заклинания и объекты на карте. Первый такой мод, «Ледяной куб», появится в каталоге модов лаунчера: он ставится отдельно и в саму игру не входит."
+      ],
+      "en": [
+        "Mods can now add their own spells and map objects. The first such mod, Ice cube, is in the launcher mod catalogue: it is installed separately and is not part of the game itself."
+      ]
+    },
+    {
+      "version": "v0.1.607",
+      "date": "2026-11-13T22:10:13Z",
+      "ru": [
+        "У предметов без собственной картинки (детоксин и ещё несколько) теперь видна понятная временная заглушка, а не пустое место или чужая картинка."
+      ],
+      "en": [
+        "Items that have no picture of their own (detoxin and a few others) now show a clear temporary placeholder instead of no picture or an unrelated one."
+      ]
+    },
+    {
+      "version": "v0.1.605",
+      "date": "2026-11-13T22:02:24Z",
+      "ru": [
+        "Картинки оружия в PipBuck и на оружейном стенде рисуются под размер показа, контуры стали чётче. У большинства оружия корпус в оригинале это маленькая растровая картинка, поэтому выигрыш скромный.",
+        "Маленькие растровые картинки предметов (вентилятор, лампы, патроны) при увеличении сглаживаются, как в оригинале, а не показывают лесенку пикселей."
+      ],
+      "en": [
+        "Weapon pictures in the PipBuck and on the weapon stand are drawn at the size shown, so their outlines are crisper. Most weapon bodies are small bitmaps in the original, so the gain is modest.",
+        "Small bitmap item pictures (the fan, lamps, ammunition) are smoothed when enlarged, as in the original, instead of showing stepped pixels."
+      ]
+    },
+    {
+      "version": "v0.1.602",
+      "date": "2026-11-13T14:15:45Z",
+      "ru": [
+        "Проба векторной графики: иконки предметов, оружие и босс рейдеров теперь рисуются игрой из векторных данных, а не из готовых картинок. Выглядеть должны так же, и работать игра должна так же. Сообщите о любом замедлении, долгой загрузке или пропавших картинках.",
+        "Эти картинки игра отрисовывает один раз при старте и при загрузке локации."
+      ],
+      "en": [
+        "Trial of vector art: item icons, weapons and the raider boss are now drawn by the game from vector data instead of ready pictures. They should look the same as before and the game should run the same. Tell us about any slowdown, longer loading or missing pictures.",
+        "The game asks for a one-time redraw of these pictures at start and when a land loads."
+      ]
+    },
+    {
+      "version": "v0.1.595",
+      "date": "2026-11-13T11:25:15Z",
+      "ru": [
+        "Картинки обвесов теперь честные временные заглушки со знаком «?» и типом детали. Раньше там стояли неподходящие картинки из оригинала.",
+        "В других модах, где своих картинок не было, теперь те же заглушки, и об этом сказано в описании мода."
+      ],
+      "en": [
+        "Attachment pictures are now clear temporary placeholders marked with \"?\" and the part type. Before, they were unrelated pictures from the original.",
+        "Other mods that had no art of their own now show the same placeholders, and their descriptions say so."
+      ]
+    },
+    {
+      "version": "v0.1.592",
+      "date": "2026-11-13T10:26:48Z",
+      "ru": [
+        "Прицелы переделаны: зажмите правую кнопку мыши, и камера плавно сдвинется к курсору на дальность прицела. Отпустите кнопку, и камера вернётся. Выстрел сам по себе камеру больше не двигает.",
+        "Телекинез теперь только на Q, правая кнопка отдана прицеливанию. Обе клавиши можно переназначить в настройках управления."
+      ],
+      "en": [
+        "Scopes reworked: hold the right mouse button and the camera moves smoothly toward the cursor by the scope's range. Release it and the camera comes back. A shot by itself no longer moves the camera.",
+        "Telekinesis is now on Q only; the right mouse button is used for aiming. Both can be rebound in the controls settings."
+      ]
+    },
+    {
+      "version": "v0.1.589",
+      "date": "2026-11-13T09:42:49Z",
+      "ru": [
+        "Исправлено: на странице статуса длинные названия параметров наезжали на значения.",
+        "Исправлено: текст подсказки по кнопке «?» в ПипБаке обрезался; теперь он показывается в окне, как в оригинале.",
+        "Исправлено: клетки навыков получили обводку, как в оригинале, цифры уровней стоят по центру клеток."
+      ],
+      "en": [
+        "Fixed: on the status page long parameter names ran over their values.",
+        "Fixed: the \"?\" help text in the PipBuck was cut off; it now opens in a box, as in the original.",
+        "Fixed: the skill cells have their outline again, as in the original, and the level digits are centred on the cells."
+      ]
+    },
+    {
+      "version": "v0.1.588",
+      "date": "2026-11-13T09:30:00Z",
+      "ru": [
+        "Исправлено: игра зависала на несколько секунд при первом открытии вкладки брони на оружейном стенде и при первом надевании брони."
+      ],
+      "en": [
+        "Fixed: the game froze for several seconds the first time the armour tab of the weapon stand was opened and the first time an armour was put on."
+      ]
+    },
+    {
+      "version": "v0.1.586",
+      "date": "2026-11-13T08:38:59Z",
+      "ru": [
+        "Исправлено: при телекинезе стрелка броска и подпись предмета дёргались вслед за предметом; теперь они идут вместе с ним плавно.",
+        "Исправлено: на странице навыков вернулись цифры уровней 1–5 над клетками, как в оригинале.",
+        "Исправлено: текст в ПипБаке и окнах стал чётким, как в оригинале (буквы больше не размыты)."
+      ],
+      "en": [
+        "Fixed: during telekinesis the throw arrow and the item label shook behind the item; now they move with it smoothly.",
+        "Fixed: the skills page shows the level numbers 1-5 over the cells again, as in the original.",
+        "Fixed: PipBuck and window text is crisp again, as in the original (letters are no longer blurry)."
+      ]
+    },
+    {
+      "version": "v0.1.584",
+      "date": "2026-11-13T07:02:21Z",
+      "ru": [
+        "Новое: стойка оружия в оформлении оригинала: фон, вкладки с картинками, картинки оружия, звезда, подсказка, строка массы, красный крестик закрытия; окно описания предмета как в оригинале.",
+        "Новое: окно дома (мастерская, наборы) в том же оформлении, что стойка.",
+        "Новое: редактор внешности пони как в оригинале: рамка, предпросмотр, кнопки-стрелки, галочка, палитра цветов, ползунки RGB, кнопки «По умолчанию», «Отмена», «ОК»; работает и из нового режима игры, и со страницы ПипБака.",
+        "Исправлено: дорожки ползунков в редакторе внешности были невидимы; палитра просвечивала строки под собой."
+      ],
+      "en": [
+        "New: the weapon stand in the original's design: background, tabs with pictures, weapon pictures, the star, the hint line, the mass line, the red close cross; the item description box as in the original.",
+        "New: the home window (workbench, kits) in the same design as the stand.",
+        "New: the pony appearance editor as in the original: frame, preview, arrow buttons, check box, colour palette, RGB sliders, Default, Cancel and OK buttons; it works both from New game and from the PipBuck page.",
+        "Fixed: the slider tracks in the appearance editor were invisible; the palette let the rows behind it show through."
+      ]
+    },
+    {
+      "version": "v0.1.581",
+      "date": "2026-11-13T06:32:23Z",
+      "ru": [
+        "Новое: страницы «Настройки», «Автоподбор» и «Управление» внутри ПипБака в оформлении оригинала: строки, галочки, ползунки громкости, описание выбранного пункта справа, таблица клавиш, окно назначения клавиши. Кнопка «Принять» появляется только после изменения клавиши, как в оригинале.",
+        "Исправлено: полоса прокрутки таблицы управления закрывала колонку геймпада; подпись геймпада заходила под кнопки; на страницах настроек внизу показывались крышки.",
+        "Новое: на странице настроек ПипБака работают стрелки вверх/вниз и клавиша действия."
+      ],
+      "en": [
+        "New: the Options, Auto pickup and Control pages inside the PipBuck in the original's design: rows, check boxes, volume sliders, the description of the chosen row at the right, the key table, the key assignment box. The Accept button appears only after a key change, as in the original.",
+        "Fixed: the control table's scroll bar covered the gamepad column; the gamepad note ran under the buttons; the options pages showed the caps count on the bottom line.",
+        "New: on the PipBuck options page the up/down arrows and the action key work."
+      ]
+    },
+    {
+      "version": "v0.1.577",
+      "date": "2026-11-13T05:46:39Z",
+      "ru": [
+        "Новое: ПипБак в оформлении оригинала: фон экрана, панель списка, полосы прокрутки, счётчики количества, кнопки страниц, шрифты описаний и нижней строки, значок главного квеста, страница ошибки, вкладки с их сигналом.",
+        "Новое: локальная карта с рамкой, кнопками и меткой игрока оригинала; S.A.T.S.: подсветка экрана, метки очереди, подписи целей и круг радиуса как в оригинале.",
+        "Исправлено: круг радиуса взрыва в S.A.T.S. был в 40 раз больше нужного и никогда не попадал на экран; метки очереди S.A.T.S. были невидимы; пустые списки рисовали заголовки колонок поверх надписи; страница сохранений затемняла пустые слоты."
+      ],
+      "en": [
+        "New: the PipBuck in the original's design: screen background, list panel, scroll bars, quantity steppers, page buttons, description and bottom-line fonts, main quest icon, error page, tabs with their signal.",
+        "New: the local map with the original's frame, buttons and player tag; S.A.T.S.: screen tint, queue markers, target labels and the radius circle as in the original.",
+        "Fixed: the S.A.T.S. blast radius circle was 40 times too big and never appeared on screen; the S.A.T.S. queue markers were invisible; empty lists drew column headers over the message; the saves page dimmed empty slots."
+      ]
+    },
+    {
+      "version": "v0.1.571",
+      "date": "2026-11-13T05:05:37Z",
+      "ru": [
+        "Новое: тексты интерфейса в игре (здоровье, оружие и патроны, быстрый предмет, эффекты, сообщения, названия локаций, селектор оружия, избранное, числа урона) нарисованы шрифтом и размерами оригинала, без масштабирования.",
+        "Новое: окна уведомления о предмете, терминалов и записок, диалога, экрана загрузки и окна ошибки нарисованы в оформлении оригинала.",
+        "Исправлено: рамка диалога стояла на 16 пикселей выше и левее; картинка навыка на экране загрузки закрывала надпись; реплики персонажей уменьшались при отдалении камеры."
+      ],
+      "en": [
+        "New: the in-game interface texts (health, weapon and ammo, quick item, effects, messages, location names, weapon selector, favourites, damage numbers) use the original's font and sizes, unscaled.",
+        "New: the item notice, terminal and note windows, the dialogue box, the loading screen and the error window are drawn in the original's design.",
+        "Fixed: the dialogue frame stood 16 pixels up and left; the skill picture on the loading screen covered the text; NPC speech shrank when the camera zoomed out."
+      ]
+    },
+    {
+      "version": "v0.1.567",
+      "date": "2026-11-13T04:26:55Z",
+      "ru": [
+        "Исправлено: экран управления из главного меню: подсказка по геймпаду читается под таблицей, кнопки «По умолчанию» и «Принять» стоят на линии кнопок оригинала, полоса прокрутки как в оригинале."
+      ],
+      "en": [
+        "Fixed: the Controls screen of the main menu: the gamepad hint is readable under the table, the Default and Accept buttons stand on the original's button line, the scroll bar is the original's."
+      ]
+    },
+    {
+      "version": "v0.1.564",
+      "date": "2026-11-13T03:59:58Z",
+      "ru": [
+        "Новое: настройки, автоподбор и управление из главного меню нарисованы строками настроек ПипБака оригинала (строки, флажки, полосы громкости, рамка выбранной строки, клетки клавиш)."
+      ],
+      "en": [
+        "New: options, auto pickup and controls opened from the main menu are drawn with the option rows of the original's PipBuck (rows, check boxes, volume bars, the frame of the chosen row, key cells)."
+      ]
+    },
+    {
+      "version": "v0.1.562",
+      "date": "2026-11-13T03:50:40Z",
+      "ru": [
+        "Новое: меню паузы, журнал смертей и менеджер модов нарисованы в оформлении главного меню оригинала (рамка, кнопки, шрифты, полоса прокрутки)."
+      ],
+      "en": [
+        "New: the pause menu, the death log and the mod manager are drawn in the style of the original's main menu (frame, buttons, fonts, scroll bar)."
+      ]
+    },
+    {
+      "version": "v0.1.560",
+      "date": "2026-11-13T03:32:49Z",
+      "ru": [
+        "Исправлено: пистолет в главном меню плывёт плавно, без скачков по одному пикселю.",
+        "Новое: окна «Новая игра», «Загрузить игру» и «Авторы» в главном меню нарисованы как в оригинале."
+      ],
+      "en": [
+        "Fixed: the pistol in the main menu floats smoothly, without one-pixel jumps.",
+        "New: the New game, Load game and Authors windows of the main menu are drawn as in the original."
+      ]
+    },
+    {
+      "version": "v0.1.556",
+      "date": "2026-11-13T02:55:03Z",
+      "ru": [
+        "Исправлено: искры в свечении рога и пистолета в главном меню мигают вразнобой, как в оригинале",
+        "Исправлено: пистолет и кольца магии в главном меню двигаются плавно"
+      ],
+      "en": [
+        "Fixed: the sparks in the horn and pistol glow of the main menu blink out of step, as in the original",
+        "Fixed: the pistol and the magic rings in the main menu move smoothly"
+      ]
+    },
+    {
+      "version": "v0.1.554",
+      "date": "2026-11-13T02:06:32Z",
+      "ru": [
+        "Исправлено: в главном меню у пони не было глаза и пистолета",
+        "Исправлено: свечение рога и пистолета в главном меню стало ярким и стоит на своём месте",
+        "Главное меню оформлено как в оригинале: кнопки, шрифты, ссылки, советы, кнопки языков",
+        "В главном меню показан номер сборки"
+      ],
+      "en": [
+        "Fixed: the pony in the main menu had no eye and no pistol",
+        "Fixed: the glow of the horn and the pistol in the main menu is bright and in its place",
+        "The main menu looks like the original: buttons, fonts, links, advice, language buttons",
+        "The main menu shows the build number"
+      ]
+    },
+    {
+      "version": "v0.1.552",
+      "date": "2026-11-13T01:09:35Z",
+      "ru": [
+        "Исправлено: переход между локациями пропадал, если его запросить сразу после предыдущего",
+        "Исправлено: закрытая дверь не выбиралась курсором, наведённым на её ближнюю половину"
+      ],
+      "en": [
+        "Fixed: a travel request made right after the previous one was dropped",
+        "Fixed: a closed door could not be targeted with the cursor on its near half"
+      ]
+    },
+    {
+      "version": "v0.1.541",
+      "date": "2026-11-13T00:49:44Z",
+      "ru": [
+        "Первая сборка, опубликованная через лаунчер",
+        "Игра ставится и обновляется лаунчером, моды и каталог модов в лаунчере"
+      ],
+      "en": [
+        "First build published through the launcher",
+        "The launcher installs and updates the game; mods and the mod catalogue are in the launcher"
+      ]
+    }
+  ]
+}

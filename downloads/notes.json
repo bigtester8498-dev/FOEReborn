@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "version": "v0.1.541",
+      "date": "2026-11-13T00:49:44Z",
+      "ru": [
+        "Первая сборка, опубликованная через лаунчер",
+        "Игра ставится и обновляется лаунчером, моды и каталог модов в лаунчере"
+      ],
+      "en": [
+        "First build published through the launcher",
+        "The launcher installs and updates the game; mods and the mod catalogue are in the launcher"
+      ]
+    }
+  ]
+}

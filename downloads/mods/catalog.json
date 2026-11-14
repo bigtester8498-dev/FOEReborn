@@ -1,0 +1,219 @@
+{
+  "format": 1,
+  "builtAt": "2026-11-14T11:41:32Z",
+  "groups": [
+    {
+      "id": "reborn",
+      "name": {
+        "ru": "Дополнения FOE Reborn",
+        "en": "FOE Reborn additions"
+      },
+      "description": {
+        "ru": "То, что FOE Reborn добавляет к оригинальной игре: свой дом, модули оружия, случайные встречи, вражду фракций, заклинание ледяного куба и новые способности.",
+        "en": "What FOE Reborn adds to the original game: a home of your own, weapon attachments, random encounters, enemy infighting, the Ice cube spell and new perks."
+      },
+      "order": 10
+    }
+  ],
+  "mods": [
+    {
+      "id": "reborn_anvil",
+      "name": {
+        "ru": "Способность «Наковальня»",
+        "en": "Anvil Drop perk"
+      },
+      "description": {
+        "ru": "Новая способность для того, кто уже умеет бросать телекинезом (нужны «Манипулятор нулевого уровня», телекинез 3 и 8 уровень). Удерживайте клавишу броска, пока держите предмет или существо телекинезом: оно задрожит всё сильнее и через полторы секунды рухнет вертикально вниз с силой обычного броска. Короткое нажатие по-прежнему бросает к курсору.",
+        "en": "A new perk, Anvil Drop, for a telekinetic who can already throw (Zero point magical field manipulator, Telekinesis 3, level 8). Hold the throw key while you hold an object or a creature with telekinesis: it trembles, harder and harder, and after a second and a half it crashes straight down with the force of a normal throw and for the same energy and mana. A short press still throws toward the cursor."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "code",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 14925,
+      "sha256": "d8d016843349f2943a670d669a428a57d5161b5d61490664039b53c6dbc3958c",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-114132/reborn_anvil-1.0.0-d8d016843349f294.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_attachments",
+      "name": {
+        "ru": "Модули оружия",
+        "en": "Weapon attachments"
+      },
+      "description": {
+        "ru": "22 детали обвеса: прицелы, магазины, дульные насадки, рукояти, подствольные устройства и приклады для пистолетов, винтовок, дробовиков, пистолетов-пулемётов, энергетического и тяжёлого оружия. Ставятся на верстаке (страница «Создание», вкладка «Обвес»); попадаются в ящиках с оружием и инструментами, продаются у оружейника, 16 схем у механика. 20 из 22 картинок пока временные: рамка со знаком «?» и названием слота.",
+        "en": "22 weapon attachments: scopes, magazines, muzzle devices, grips, underbarrel devices and stocks for pistols, rifles, shotguns, SMGs, energy and heavy weapons. Installed at a workbench (Craft page, Attachments tab); found in weapon and tool containers, sold by the gunsmith, 16 schematics at the mechanic. Item pictures: 20 of the 22 are temporary placeholders (a framed \"?\" with the slot name) until they get their own art."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "data",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 26824,
+      "sha256": "c0e9caddd2821f7b314311d3ccc6b17caf411c97b94ae0db90253e421e271dc3",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-042406/reborn_attachments-1.0.0-c0e9caddd2821f7b.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_encounters",
+      "name": {
+        "ru": "Случайные встречи",
+        "en": "Random encounters"
+      },
+      "description": {
+        "ru": "Случайные встречи на карте мира, задумка автора оригинала, которую он отложил: путь на сюжетную или случайную землю с третьего этапа может прерваться в двух комнатах с врагами этапа цели; выход продолжает путь. Шанс 15% за поездку, переключатель «Случайные встречи» в настройках их выключает. Другие моды могут добавлять свои встречи.",
+        "en": "Random encounters on the world map, a plan the original's author shelved: a trip to a story or random land of stage 3 and later may stop in two rooms with the enemies of the destination's stage; the exit continues the trip. 15% per trip, the Options switch 'Random encounters' turns them off. Other mods can add encounters of their own."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "data",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 2390,
+      "sha256": "32e3cc754202df98b30359acb8a0cf7bf7ee08ccab5ea516e218fc35d6e16ea4",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-042406/reborn_encounters-1.0.0-32e3cc754202df98.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_home",
+      "name": {
+        "ru": "Свой дом",
+        "en": "Player home"
+      },
+      "description": {
+        "ru": "Свои комнаты за «Гарцующим пони» в базовом лагере: дверь рядом с контрольной точкой лагеря, терминал планировщика, наборы мебели у механика лагеря (верстак, химическая лаборатория, плита, сундук, кровать, стойки для оружия и брони, украшения) с уровнями улучшений. Другие моды могут добавлять свои дома поверх него. У стойки для брони и её набора пока временная картинка.",
+        "en": "Your own rooms behind the Prancing Pony in the base camp: a door beside the camp's checkpoint, a planner terminal, furniture kits sold by the camp mechanic (workbench, chemistry lab, stove, storage chest, bed, weapon and armour stands, decoration) with upgrade tiers. Other mods can add homes of their own on top of it. The armour stand and its kit show a temporary placeholder picture until they get their own art."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "data",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 96820,
+      "sha256": "35b1d7b8c0d647d9b447de725197a0d88924e084c609b6a14bfbdc3c135b9e31",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-042406/reborn_home-1.0.0-35b1d7b8c0d647d9.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_icecube",
+      "name": {
+        "ru": "Заклинание «Ледяной куб»",
+        "en": "Ice cube spell"
+      },
+      "description": {
+        "ru": "Новое заклинание: тяжёлый ледяной куб у курсора. На него можно встать, за ним можно укрыться от пуль, его можно бросить телекинезом; брошенный куб может заморозить того, в кого попадёт. Куб тает через 30 секунд (дольше при большей силе заклинаний) и раскалывается от сильного удара. Заклинание продаёт торговец магией с 7-го уровня. У заклинания и куба пока временные картинки.",
+        "en": "A new spell, Ice cube: it makes a heavy cube of ice at the cursor. Stand on it, throw it with telekinesis or hold it in front of you as a shield; a thrown or dropped cube slides across the floor, and a thrown cube may freeze whoever it hits. The cube melts in 30 seconds (longer with a stronger spell power) and you can see it shrink; blows and bullets crack it, and it shatters when it can take no more. The mage trader sells the spell from level 7. The pictures are temporary."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.3",
+      "kind": "code",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 109786,
+      "sha256": "ac8e218a4c737692db91327b48d4a1068f7cf742dcd9a741b82341318826794e",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-094600/reborn_icecube-1.0.3-ac8e218a4c737692.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_infighting",
+      "name": {
+        "ru": "Вражда фракций",
+        "en": "Enemy infighting"
+      },
+      "description": {
+        "ru": "Враждебные фракции видят и атакуют друг друга, задумка автора оригинала: рейдеры, работорговцы, зебры, наёмники, Стальные Рейнджеры и Анклав против гулей, монстров и адских гончих, работорговцы против зебр, рейнджеры против Анклава. Работает, только пока в настройках включён переключатель «Вражда фракций» (по умолчанию выключен). Другие моды могут добавлять свои группы, пары и правила.",
+        "en": "Hostile factions see and attack each other, a plan the original's author skipped: raiders, slavers, zebras, mercenaries, Steel Rangers and the Enclave against ghouls, monsters or hellhounds, slavers against zebras, rangers against the Enclave. Active only while the Options switch 'Enemy infighting' is on (off by default). Other mods can add groups, pairs and rules."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "data",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 1480,
+      "sha256": "d3c4cd668ae92c2fb7413207af15028289cb98b4158c55781acfaf89edc16ca6",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-042406/reborn_infighting-1.0.0-d3c4cd668ae92c2f.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reborn_twofront",
+      "name": {
+        "ru": "Способность «Рог на два фронта»",
+        "en": "Two-Front Horn perk"
+      },
+      "description": {
+        "ru": "Новая способность: боевые заклинания и гранаты можно применять, пока оружие стреляет или перезаряжается, выстрел и перезарядка не прерываются. Такое заклинание стоит на 25% больше маны. Нужны огнестрельное или энергомагическое оружие 1, телекинез 3, способность «Боевой маг» и 10 уровень.",
+        "en": "A new perk, Two-Front Horn: a unicorn can cast combat spells and throw grenades while the weapon is firing or reloading; the shot or the reload goes on. A combat spell cast that way costs 25% more energy and mana. Needs Firearms or Energy weapons 1, Telekinesis 3, the perk Battle mage and level 10."
+      },
+      "author": "FOE Reborn",
+      "version": "1.0.0",
+      "kind": "code",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 11258,
+      "sha256": "b44fcb540830c263266e3737ad17db7372cd2f6e37a4f250fbdd2d60b1d81f0b",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-114132/reborn_twofront-1.0.0-b44fcb540830c263.zip",
+      "group": "reborn"
+    },
+    {
+      "id": "reforged_balance",
+      "name": {
+        "ru": "Баланс Reforged (Kostr184)",
+        "en": "Reforged balance (Kostr184)"
+      },
+      "description": {
+        "ru": "Изменения баланса фанатского мода Reforged от Kostr184 как мод данных: зелья, импланты, заклинания, оружие, броня, патроны, ловушки.",
+        "en": "The balance changes of the fan mod Reforged by Kostr184 (with !AlexWolfson and Empalu) as a data mod: potions, implants, spells, weapons, armour, ammo, traps, prices and traders. The bug fixes of Reforged are already in the base game. Only the changes its ReadMe states with numbers or exact items are here; README.md lists every ReadMe line and what became of it."
+      },
+      "author": "Kostr184 (Reforged mod), packaged for FOE Reborn",
+      "version": "1.0.0",
+      "kind": "data",
+      "game": ">=1.0.2",
+      "requires": [
+        {
+          "id": "classic",
+          "version": ">=1.0.2"
+        }
+      ],
+      "size": 9227,
+      "sha256": "2e4e55036d56af04d1943ae767de733db4b62a81e9daea56db475d8520bac1dc",
+      "url": "https://github.com/bigtester8498-dev/FOEReborn/releases/download/mods-20261114-042406/reforged_balance-1.0.0-2e4e55036d56af04.zip"
+    }
+  ]
+}
