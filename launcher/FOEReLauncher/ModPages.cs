@@ -168,6 +168,7 @@ namespace FOEReLauncher
             ForeColor = Theme.Body;
             HeaderStyle = ColumnHeaderStyle.Nonclickable;
             OwnerDraw = true;
+            DoubleBuffered = true;
             Font = Theme.Font(9.75f);
             // The row height comes from the small image list; the images themselves are not used.
             SmallImageList = new ImageList { ImageSize = new Size(1, Math.Max(16, Theme.S(26))) };
@@ -265,26 +266,32 @@ namespace FOEReLauncher
             {
                 Theme.DrawCheck(e.Graphics, CheckRect(e.Item, row), look.IsGroup ? look.Check : e.Item.Checked ? CheckState.Checked : CheckState.Unchecked, look.CheckEnabled);
             }
+
+            // The whole row is drawn here, cells included: on mouse hover Windows repaints a row with DrawItem alone,
+            // without DrawSubItem, so cells drawn only there vanished under the row background.
+            for (var i = 0; i < e.Item.SubItems.Count && i < Columns.Count; i++)
+            {
+                var cell = i == 0 ? new Rectangle(row.X, row.Y, Columns[0].Width, row.Height) : e.Item.SubItems[i].Bounds;
+                DrawCell(e.Graphics, e.Item, e.Item.SubItems[i], i, cell, look);
+            }
         }
 
         protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
         {
-            if (e.Item == null || e.SubItem == null)
-            {
-                return;
-            }
+            // Cells are drawn with their row in OnDrawItem.
+        }
 
-            var look = LookOf(e.Item);
-            var cell = e.Bounds;
+        private void DrawCell(Graphics g, ListViewItem item, ListViewItem.ListViewSubItem sub, int column, Rectangle cell, RowLook look)
+        {
             const TextFormatFlags Flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
-            if (e.ColumnIndex == 0)
+            if (column == 0)
             {
-                var label = e.Item.GetBounds(ItemBoundsPortion.Label);
+                var label = item.GetBounds(ItemBoundsPortion.Label);
                 var x = CheckBoxes ? label.X : cell.X + Theme.S(4);
                 if (look.IsGroup)
                 {
-                    var chevron = ChevronRect(e.Item, cell);
-                    Theme.DrawChevron(e.Graphics, chevron, look.Open, Theme.Bright);
+                    var chevron = ChevronRect(item, cell);
+                    Theme.DrawChevron(g, chevron, look.Open, Theme.Bright);
                     x = chevron.Right + Theme.S(2);
                 }
                 else if (look.Indent)
@@ -298,8 +305,8 @@ namespace FOEReLauncher
                     var tag = Texts.T("cat.kind.code");
                     var size = TextRenderer.MeasureText(tag, Font, new Size(int.MaxValue, cell.Height), TextFormatFlags.NoPrefix);
                     var tagRect = new Rectangle(right - size.Width - Theme.S(6), cell.Y + ((cell.Height - size.Height) / 2) - 1, size.Width + Theme.S(6), size.Height + 2);
-                    Theme.DrawFrame(e.Graphics, tagRect, Color.FromArgb(150, Theme.Amber));
-                    TextRenderer.DrawText(e.Graphics, tag, Font, tagRect, Theme.Amber, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                    Theme.DrawFrame(g, tagRect, Color.FromArgb(150, Theme.Amber));
+                    TextRenderer.DrawText(g, tag, Font, tagRect, Theme.Amber, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
                     right = tagRect.Left - Theme.S(4);
                 }
 
@@ -307,22 +314,22 @@ namespace FOEReLauncher
                 {
                     var color = look.IsGroup ? Theme.Bright : look.Color;
                     var r = new Rectangle(x, cell.Y, Math.Max(0, right - x), cell.Height);
-                    if (look.IsGroup || e.Item.Selected)
+                    if (look.IsGroup || item.Selected)
                     {
-                        Theme.DrawGlowText(e.Graphics, e.SubItem.Text, font ?? Font, r, color, Theme.Bright, Flags, look.IsGroup ? 1 : 0);
+                        Theme.DrawGlowText(g, sub.Text, font ?? Font, r, color, Theme.Bright, Flags, look.IsGroup ? 1 : 0);
                     }
                     else
                     {
-                        TextRenderer.DrawText(e.Graphics, e.SubItem.Text, font ?? Font, r, color, Flags);
+                        TextRenderer.DrawText(g, sub.Text, font ?? Font, r, color, Flags);
                     }
                 }
 
                 return;
             }
 
-            var last = e.ColumnIndex == e.Item.SubItems.Count - 1;
+            var last = column == item.SubItems.Count - 1;
             var c = last && look.StateColor.HasValue ? look.StateColor.Value : look.IsGroup ? Theme.Dim : look.Color;
-            TextRenderer.DrawText(e.Graphics, e.SubItem.Text, Font, Rectangle.Inflate(cell, -Theme.S(6), 0), c, Flags);
+            TextRenderer.DrawText(g, sub.Text, Font, Rectangle.Inflate(cell, -Theme.S(6), 0), c, Flags);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
