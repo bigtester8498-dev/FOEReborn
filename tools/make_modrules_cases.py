@@ -129,6 +129,12 @@ def build():
          note="the first error is the reason, every issue is listed")
     case("warning_game_range", game(m("a", game="<1.0")), sel(["a"]), note="a warning, the mod still loads")
     case("warning_unknown_field", game(m("a", tags=["x"], url="http://e", homepage="h", colour=1)), sel(["a"]))
+    # every manifest field the game knows (PackageLoader.Known): no issue. The game's EditMode test fails when the game
+    # knows a field this case lacks, so a new field reaches the launcher's list through this case.
+    case("all_known_fields", game(m("a", description="d", author="x", game=">=1.0", requires=[req("classic", ">=1.0.2")],
+                                   loadAfter=["classic"], loadBefore=[], incompatible=[], assemblies=[], generated={"by": "t"},
+                                   url="http://e", tags=["x"], **{"$schema": "s"}, defaultEnabled=False,
+                                   descriptions={"ru": "d"})), sel(["a"]), note="no issues")
     case("code_mod_ok", game(m("a", assemblies=["Code/A.dll"]), extra={"Mods/a/Code/A.dll": "MZ"}), sel(["a"]))
     case("code_mod_missing_dll", game(m("a", assemblies=["Code/A.dll"])), sel(["a"]))
     case("code_mod_dll_escape", game(m("a", assemblies=["../A.dll"])), sel(["a"]))

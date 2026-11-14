@@ -5562,6 +5562,121 @@
       }
     },
     {
+      "name": "all_known_fields",
+      "note": "no issues",
+      "files": {
+        "Content/classic/package.json": {
+          "id": "classic",
+          "name": "Classic",
+          "version": "1.0.2",
+          "requires": [],
+          "loadAfter": [],
+          "assemblies": [],
+          "generated": {
+            "by": "tools/import_classic.py"
+          }
+        },
+        "Content/reborn/package.json": {
+          "id": "reborn",
+          "name": "Reborn texts",
+          "version": "0.1.0",
+          "requires": [],
+          "loadAfter": [
+            "classic"
+          ],
+          "assemblies": []
+        },
+        "Mods/a/package.json": {
+          "id": "a",
+          "name": "Mod a",
+          "version": "1.0.0",
+          "description": "d",
+          "author": "x",
+          "game": ">=1.0",
+          "requires": [
+            {
+              "id": "classic",
+              "version": ">=1.0.2"
+            }
+          ],
+          "loadAfter": [
+            "classic"
+          ],
+          "loadBefore": [],
+          "incompatible": [],
+          "assemblies": [],
+          "generated": {
+            "by": "t"
+          },
+          "url": "http://e",
+          "tags": [
+            "x"
+          ],
+          "$schema": "s",
+          "defaultEnabled": false,
+          "descriptions": {
+            "ru": "d"
+          }
+        }
+      },
+      "settings": {
+        "enabled": [
+          "a"
+        ],
+        "disabled": [],
+        "order": [
+          "a"
+        ]
+      },
+      "defaults": true,
+      "toEnable": [],
+      "toDisable": [],
+      "expect": {
+        "packages": [
+          {
+            "dir": "Content/classic",
+            "id": "classic",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Content/reborn",
+            "id": "reborn",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          },
+          {
+            "dir": "Mods/a",
+            "id": "a",
+            "state": "Active",
+            "reasonKey": "",
+            "code": false,
+            "reason": "",
+            "reasonRu": "",
+            "issues": []
+          }
+        ],
+        "order": [
+          "classic",
+          "reborn",
+          "a"
+        ],
+        "enabled": [
+          "a"
+        ],
+        "toEnable": {},
+        "toDisable": {}
+      }
+    },
+    {
       "name": "code_mod_ok",
       "note": "",
       "files": {

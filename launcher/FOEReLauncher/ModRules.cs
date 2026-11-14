@@ -435,7 +435,7 @@ namespace FOEReLauncher
         /// <summary>Manifest keys the game knows besides the fields it reads.</summary>
         private static readonly HashSet<string> KnownExtra = new HashSet<string>(StringComparer.Ordinal)
         {
-            "generated", "url", "tags", "$schema"
+            "generated", "url", "tags", "$schema", "descriptions"
         };
 
         /// <summary>Reason texts by key: English (the game's log) and Russian (the game's ru texts).</summary>
