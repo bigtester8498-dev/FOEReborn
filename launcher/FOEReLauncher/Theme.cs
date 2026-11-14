@@ -20,6 +20,17 @@ namespace FOEReLauncher
         internal static readonly Color Body = Hex("#3BE6A2");
         internal static readonly Color Dim = Hex("#1FA673");
         internal static readonly Color Faint = Hex("#147252");
+
+        static Icon? appIcon;
+
+        /// <summary>The launcher's icon with every size, for the title bars and the taskbar (null if the resource is missing).</summary>
+        internal static Icon? AppIcon => appIcon ??= LoadAppIcon();
+
+        static Icon? LoadAppIcon()
+        {
+            using var s = typeof(Theme).Assembly.GetManifestResourceStream("FOEReLauncher.foe.ico");
+            return s == null ? null : new Icon(s);
+        }
         internal static readonly Color Amber = Hex("#F2DE4C");
         internal static readonly Color Bad = Hex("#FF6A5C");
         internal static readonly Color Frame = Hex("#0B5E3D");

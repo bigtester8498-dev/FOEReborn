@@ -102,6 +102,7 @@ namespace FOEReLauncher
             _args = args;
             Texts.Language = _service.Language.Length > 0 ? _service.Language : Texts.SystemLanguage();
 
+            Icon = Theme.AppIcon ?? Icon;
             BackColor = Background;
             ForeColor = BodyColor;
             Font = Theme.Font(9.75f);
@@ -1440,6 +1441,7 @@ namespace FOEReLauncher
         public PatchNotesForm(IEnumerable<PatchNote> notes, string? installedVersion = null)
         {
             Text = Texts.T("btn.notes");
+            Icon = Theme.AppIcon ?? Icon;
             BackColor = MainForm.Background;
             ForeColor = MainForm.BodyColor;
             Font = Theme.Font(9.75f);

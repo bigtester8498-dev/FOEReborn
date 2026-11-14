@@ -9,6 +9,7 @@
     <RootNamespace>FOEReLauncher</RootNamespace>
     <AssemblyName>FOEReLauncher</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>foe.ico</ApplicationIcon>
     <!-- CI overrides this with -p:Version=1.0.<commits in launcher/>.0 -->
     <Version>1.0.0.0</Version>
     <Product>FOE Reborn Launcher</Product>
@@ -28,6 +29,11 @@
   <ItemGroup>
     <!-- Reference assemblies only: lets the net48 build run on any runner. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The exe icon (ApplicationIcon) holds one size for Explorer; the windows load every size from this copy. -->
+    <EmbeddedResource Include="foe.ico" LogicalName="FOEReLauncher.foe.ico" />
   </ItemGroup>
 
   <ItemGroup>

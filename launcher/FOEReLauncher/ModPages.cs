@@ -1994,6 +1994,7 @@ namespace FOEReLauncher
         private ConfirmForm(string title, string text, string confirm, bool warning)
         {
             Text = title;
+            Icon = Theme.AppIcon ?? Icon;
             BackColor = MainForm.Background;
             ForeColor = MainForm.BodyColor;
             Font = Theme.Font(10f);
