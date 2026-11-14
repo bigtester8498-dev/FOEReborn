@@ -55,6 +55,51 @@ namespace FOEReLauncher
 
         internal static PipButton MakeButton(PipButtonKind kind = PipButtonKind.Normal) => MainForm.MakeButton(string.Empty, kind, 9.75f, FontStyle.Regular);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr w, IntPtr l);
+
+        [DllImport("user32.dll")]
+        private static extern bool RedrawWindow(IntPtr hwnd, IntPtr rect, IntPtr region, uint flags);
+
+        /// <summary>
+        /// Refills a details box without showing it empty: the box does not paint while it is cleared and refilled,
+        /// and is repainted once, only when its text or colours changed.
+        /// </summary>
+        internal static void Refill(RichTextBox box, Action fill)
+        {
+            if (!box.IsHandleCreated)
+            {
+                fill();
+                return;
+            }
+
+            const int WmSetRedraw = 0x000B;
+            var before = box.Rtf;
+            SendMessage(box.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                fill();
+            }
+            finally
+            {
+                SendMessage(box.Handle, WmSetRedraw, (IntPtr)1, IntPtr.Zero);
+                if (box.Rtf != before)
+                {
+                    // RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_UPDATENOW: the text and its scroll bar in one paint.
+                    RedrawWindow(box.Handle, IntPtr.Zero, IntPtr.Zero, 0x0001 | 0x0004 | 0x0400 | 0x0100);
+                }
+            }
+        }
+
+        /// <summary>Sets a column's width only when it differs: every set repaints the whole list and its header.</summary>
+        internal static void SetWidth(ColumnHeader column, int width)
+        {
+            if (column.Width != width)
+            {
+                column.Width = width;
+            }
+        }
+
         internal static void Append(RichTextBox box, string text, Color? color = null, bool bold = false)
         {
             box.SelectionStart = box.TextLength;
@@ -205,6 +250,88 @@ namespace FOEReLauncher
         }
 
         public void SetLook(string tag, RowLook look) => _looks[tag] = look;
+
+        /// <summary>
+        /// Makes the list show these rows (matched by tag) by changing only what differs: rows that stay keep their
+        /// place, text and tick, so opening or closing a group, a refresh or a move does not clear and rebuild the
+        /// whole list (the list jumped to the top and blinked). Call between BeginUpdate and EndUpdate.
+        /// </summary>
+        public void Sync(IList<ListViewItem> wanted)
+        {
+            var remaining = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var w in wanted)
+            {
+                var t = (string)w.Tag;
+                remaining[t] = remaining.TryGetValue(t, out var c) ? c + 1 : 1;
+            }
+
+            for (var i = 0; i < wanted.Count; i++)
+            {
+                var w = wanted[i];
+                var tag = (string)w.Tag;
+                while (i < Items.Count && (string)Items[i].Tag != tag && !remaining.ContainsKey((string)Items[i].Tag))
+                {
+                    Items.RemoveAt(i);
+                }
+
+                if (i < Items.Count && (string)Items[i].Tag == tag)
+                {
+                    Update(Items[i], w);
+                }
+                else
+                {
+                    var later = -1;
+                    for (var j = i + 1; j < Items.Count; j++)
+                    {
+                        if ((string)Items[j].Tag == tag)
+                        {
+                            later = j;
+                            break;
+                        }
+                    }
+
+                    if (later >= 0)
+                    {
+                        Items.RemoveAt(later);
+                    }
+
+                    Items.Insert(i, w);
+                }
+
+                if (--remaining[tag] == 0)
+                {
+                    remaining.Remove(tag);
+                }
+            }
+
+            while (Items.Count > wanted.Count)
+            {
+                Items.RemoveAt(Items.Count - 1);
+            }
+
+            Invalidate();
+        }
+
+        private static void Update(ListViewItem have, ListViewItem want)
+        {
+            while (have.SubItems.Count < want.SubItems.Count)
+            {
+                have.SubItems.Add(string.Empty);
+            }
+
+            for (var k = 0; k < want.SubItems.Count; k++)
+            {
+                if (have.SubItems[k].Text != want.SubItems[k].Text)
+                {
+                    have.SubItems[k].Text = want.SubItems[k].Text;
+                }
+            }
+
+            if (have.Checked != want.Checked)
+            {
+                have.Checked = want.Checked;
+            }
+        }
 
         public void ClearLooks() => _looks.Clear();
 
@@ -503,7 +630,13 @@ namespace FOEReLauncher
             _list.Columns.Add(string.Empty, 110);
             _list.Columns.Add(string.Empty, 110);
             _list.ItemCheck += OnItemCheck;
-            _list.SelectedIndexChanged += (s, e) => ShowDetails();
+            _list.SelectedIndexChanged += (s, e) =>
+            {
+                if (!_filling)
+                {
+                    ShowDetails();
+                }
+            };
             _list.GroupToggle += ToggleOpen;
             _listBox = new FrameBox(_list, 1);
             _details = ModUi.MakeDetails();
@@ -566,11 +699,11 @@ namespace FOEReLauncher
             var top = _examples.Bottom + Theme.S(6);
             _listBox.Bounds = new Rectangle(0, top, width, Math.Max(Theme.S(60), _detailsBox.Top - Theme.S(8) - top));
             _listBox.LayoutChild();
-            _list.Columns[1].Width = ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10");
-            _list.Columns[2].Width = ModUi.ColumnWidth(_list, 110, _list.Columns[2].Text, Texts.T("mods.src.game"), Texts.T("mods.src.catalogue"), Texts.T("mods.src.hand"));
-            _list.Columns[3].Width = ModUi.ColumnWidth(_list, 110, _list.Columns[3].Text, Texts.T("mods.st.on"), Texts.T("mods.st.off"), Texts.T("mods.st.noconsent"));
+            ModUi.SetWidth(_list.Columns[1], ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10"));
+            ModUi.SetWidth(_list.Columns[2], ModUi.ColumnWidth(_list, 110, _list.Columns[2].Text, Texts.T("mods.src.game"), Texts.T("mods.src.catalogue"), Texts.T("mods.src.hand")));
+            ModUi.SetWidth(_list.Columns[3], ModUi.ColumnWidth(_list, 110, _list.Columns[3].Text, Texts.T("mods.st.on"), Texts.T("mods.st.off"), Texts.T("mods.st.noconsent")));
             var fixedWidth = _list.Columns[1].Width + _list.Columns[2].Width + _list.Columns[3].Width + SystemInformation.VerticalScrollBarWidth + Theme.S(2);
-            _list.Columns[0].Width = Math.Max(Theme.S(140), _list.Width - fixedWidth);
+            ModUi.SetWidth(_list.Columns[0], Math.Max(Theme.S(140), _list.Width - fixedWidth));
         }
 
         public void SetGameRunning(bool running)
@@ -640,7 +773,7 @@ namespace FOEReLauncher
             _list.BeginUpdate();
             try
             {
-                _list.Items.Clear();
+                var rows = new List<ListViewItem>();
                 _list.ClearLooks();
                 var game = _service.Mods.GameState();
                 var record = _service.Mods.LoadRecord();
@@ -660,7 +793,7 @@ namespace FOEReLauncher
                         header.SubItems.Add(Texts.T("group.mods", block.Items.Count));
                         header.SubItems.Add(Texts.T("group.on", on, block.Items.Count));
                         _list.SetLook((string)header.Tag, new RowLook { IsGroup = true, Open = !_closed.Contains(block.GroupId), Check = check, CheckEnabled = !_running });
-                        _list.Items.Add(header);
+                        rows.Add(header);
                         if (_closed.Contains(block.GroupId))
                         {
                             continue;
@@ -688,10 +821,11 @@ namespace FOEReLauncher
                             Color = p.Active ? Theme.Bright : problem ? Theme.Bad : Theme.Dim,
                             StateColor = problem ? Theme.Bad : p.Active ? Theme.Bright : Theme.Dim
                         });
-                        _list.Items.Add(item);
+                        rows.Add(item);
                     }
                 }
 
+                _list.Sync(rows);
                 foreach (ListViewItem item in _list.Items)
                 {
                     if ((string)item.Tag == select)
@@ -751,6 +885,11 @@ namespace FOEReLauncher
         private void ShowDetails()
         {
             ApplyEnabled();
+            ModUi.Refill(_details, FillDetails);
+        }
+
+        private void FillDetails()
+        {
             _details.Clear();
             var group = SelectedGroup();
             if (group != null && _groups.TryGetValue(group, out var info))
@@ -1087,6 +1226,7 @@ namespace FOEReLauncher
         private readonly Label _count;
         private readonly Label _examples;
         private readonly PipList _list;
+        private bool _filling;
         private readonly FrameBox _listBox;
         private readonly RichTextBox _details;
         private readonly FrameBox _detailsBox;
@@ -1131,7 +1271,13 @@ namespace FOEReLauncher
             _list.Columns.Add(string.Empty, 60);
             _list.Columns.Add(string.Empty, 70);
             _list.Columns.Add(string.Empty, 150);
-            _list.SelectedIndexChanged += (s, e) => ShowDetails();
+            _list.SelectedIndexChanged += (s, e) =>
+            {
+                if (!_filling)
+                {
+                    ShowDetails();
+                }
+            };
             _list.GroupToggle += ToggleOpen;
             _list.KeyDown += (s, e) =>
             {
@@ -1214,11 +1360,11 @@ namespace FOEReLauncher
             var top = (examples ? _examples.Bottom : _searchBox.Bottom) + Theme.S(6);
             _listBox.Bounds = new Rectangle(0, top, width, Math.Max(Theme.S(60), _detailsBox.Top - Theme.S(8) - top));
             _listBox.LayoutChild();
-            _list.Columns[1].Width = ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10");
-            _list.Columns[2].Width = ModUi.ColumnWidth(_list, 70, _list.Columns[2].Text, "999 KB", Texts.T("group.mods", 99));
-            _list.Columns[3].Width = ModUi.ColumnWidth(_list, 150, _list.Columns[3].Text, Texts.T("cat.st.installed.on"), Texts.T("cat.st.notinstalled"), Texts.T("group.installed", 10, 10));
+            ModUi.SetWidth(_list.Columns[1], ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10"));
+            ModUi.SetWidth(_list.Columns[2], ModUi.ColumnWidth(_list, 70, _list.Columns[2].Text, "999 KB", Texts.T("group.mods", 99)));
+            ModUi.SetWidth(_list.Columns[3], ModUi.ColumnWidth(_list, 150, _list.Columns[3].Text, Texts.T("cat.st.installed.on"), Texts.T("cat.st.notinstalled"), Texts.T("group.installed", 10, 10)));
             var fixedWidth = _list.Columns[1].Width + _list.Columns[2].Width + _list.Columns[3].Width + SystemInformation.VerticalScrollBarWidth + Theme.S(2);
-            _list.Columns[0].Width = Math.Max(Theme.S(140), _list.Width - fixedWidth);
+            ModUi.SetWidth(_list.Columns[0], Math.Max(Theme.S(140), _list.Width - fixedWidth));
         }
 
         public void SetGameRunning(bool running)
@@ -1365,10 +1511,11 @@ namespace FOEReLauncher
 
         private void Fill(string? select)
         {
+            _filling = true;
             _list.BeginUpdate();
             try
             {
-                _list.Items.Clear();
+                var rows = new List<ListViewItem>();
                 _list.ClearLooks();
                 var searching = _search.Text.Trim().Length > 0;
                 foreach (var block in Blocks())
@@ -1385,7 +1532,7 @@ namespace FOEReLauncher
                         header.SubItems.Add(Texts.T("group.mods", all.Count));
                         header.SubItems.Add(updates > 0 ? Texts.T("group.updates", updates) : Texts.T("group.installed", installed, all.Count));
                         _list.SetLook((string)header.Tag, new RowLook { IsGroup = true, Open = open, StateColor = updates > 0 ? Theme.Amber : installed == all.Count ? Theme.Bright : Theme.Dim });
-                        _list.Items.Add(header);
+                        rows.Add(header);
                         if (!open)
                         {
                             continue;
@@ -1406,10 +1553,11 @@ namespace FOEReLauncher
                             Color = state == CatalogState.NotInstalled ? Theme.Bright : Theme.Body,
                             StateColor = state == CatalogState.UpdateAvailable ? Theme.Amber : state == CatalogState.NotInstalled ? Theme.Dim : state == CatalogState.NeedsGame ? Theme.Bad : Theme.Bright
                         });
-                        _list.Items.Add(item);
+                        rows.Add(item);
                     }
                 }
 
+                _list.Sync(rows);
                 foreach (ListViewItem item in _list.Items)
                 {
                     if ((string)item.Tag == select)
@@ -1429,6 +1577,7 @@ namespace FOEReLauncher
             finally
             {
                 _list.EndUpdate();
+                _filling = false;
             }
 
             _count.Text = _catalog == null ? string.Empty : Texts.T("cat.count", _catalog.Entries.Count);
@@ -1438,8 +1587,13 @@ namespace FOEReLauncher
 
         private void ShowDetails()
         {
-            _details.Clear();
             ApplyButtons();
+            ModUi.Refill(_details, FillDetails);
+        }
+
+        private void FillDetails()
+        {
+            _details.Clear();
             var group = SelectedGroup();
             if (group != null)
             {
