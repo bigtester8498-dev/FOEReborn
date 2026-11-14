@@ -604,7 +604,7 @@ namespace FOEReLauncher
             }
             catch (Exception ex)
             {
-                _checkError = ex.Message;
+                _checkError = Texts.ErrorText(ex);
             }
 
             ApplyLocalState();
@@ -860,7 +860,7 @@ namespace FOEReLauncher
                 }
                 catch (Exception ex)
                 {
-                    var error = ex.Message;
+                    var error = Texts.ErrorText(ex);
                     SetStatus(() => Texts.T("st.checkfail", error));
                     return;
                 }
@@ -879,7 +879,7 @@ namespace FOEReLauncher
             }
             catch (Exception ex)
             {
-                var message = ex.Message;
+                var message = Texts.ErrorText(ex);
                 summary = () => Texts.T("st.failed", message);
             }
             finally

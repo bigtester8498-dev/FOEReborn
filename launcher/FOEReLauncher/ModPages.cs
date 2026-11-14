@@ -114,7 +114,7 @@ namespace FOEReLauncher
             Math.Max(Theme.S(min), texts.Select(t => TextRenderer.MeasureText(t, list.Font).Width).DefaultIfEmpty(0).Max() + Theme.S(16));
 
         internal static string ErrorText(Exception ex) =>
-            ex is ModOperationException m ? m.Text : ex is InvalidDataException ? Texts.T("mods.err.hash") : ex.Message;
+            ex is ModOperationException m ? m.Text : ex is InvalidDataException ? Texts.T("mods.err.hash") : Texts.ErrorText(ex);
 
         /// <summary>Up to <paramref name="max"/> names joined by commas, then "and N more".</summary>
         internal static string Names(IEnumerable<string> names, int max = 6)
@@ -1213,7 +1213,7 @@ namespace FOEReLauncher
             catch (Exception ex)
             {
                 _catalog = null;
-                _loadError = ex.Message;
+                _loadError = Texts.ErrorText(ex);
             }
             finally
             {

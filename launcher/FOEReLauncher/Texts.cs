@@ -144,6 +144,7 @@ namespace FOEReLauncher
             ["cat.btn.refresh"] = new[] { "Обновить каталог", "Refresh" },
             ["cat.loading"] = new[] { "Загружаю каталог...", "Loading the catalogue..." },
             ["cat.empty"] = new[] { "Каталог модов пока не опубликован.", "No mod catalogue is published yet." },
+            ["err.network"] = new[] { "нет связи с сайтом обновлений. Проверьте подключение к интернету и попробуйте ещё раз", "no connection to the update site. Check your internet connection and try again" },
             ["cat.failed"] = new[] { "Не удалось загрузить каталог: {0}", "Could not load the catalogue: {0}" },
             ["cat.count"] = new[] { "Модов в каталоге: {0}", "Mods in the catalogue: {0}" },
             ["cat.d.by"] = new[] { "автор: {0}", "by {0}" },
@@ -225,6 +226,21 @@ namespace FOEReLauncher
 
         public static string SystemLanguage() =>
             CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru" ? "ru" : "en";
+
+        /// <summary>An error for the status line: a lost connection in plain words, anything else as the system says it.</summary>
+        public static string ErrorText(System.Exception ex)
+        {
+            for (var e = ex; e != null; e = e.InnerException)
+            {
+                if (e is System.Net.Http.HttpRequestException || e is System.Net.WebException || e is System.Net.Sockets.SocketException ||
+                    e is System.Threading.Tasks.TaskCanceledException)
+                {
+                    return T("err.network");
+                }
+            }
+
+            return ex.Message;
+        }
 
         public static string T(string key, params object[] args)
         {
