@@ -23,27 +23,20 @@ namespace FOEReLauncher
             Play
         }
 
-        // Dark palette of the template launcher, one to one.
-        internal static readonly Color Background = FromHex("#12141A");
-        internal static readonly Color TitleColor = FromHex("#F2F4F8");
-        internal static readonly Color BodyColor = FromHex("#C3C9D4");
-        internal static readonly Color StatusColor = FromHex("#8C94A6");
-        internal static readonly Color VersionColor = FromHex("#5C6478");
-        internal static readonly Color Accent = FromHex("#3D6FF5");
-        internal static readonly Color Secondary = FromHex("#2A2F3C");
-        internal static readonly Color SecondaryText = FromHex("#E6E9F0");
-        internal static readonly Color ProgressTrack = FromHex("#232734");
+        // The game's PipBuck palette (Theme).
+        internal static readonly Color Background = Theme.Background;
+        internal static readonly Color TitleColor = Theme.Bright;
+        internal static readonly Color BodyColor = Theme.Body;
+        internal static readonly Color StatusColor = Theme.Dim;
+        internal static readonly Color VersionColor = Theme.Faint;
+        internal static readonly Color Accent = Theme.Bright;
 
-        private const int Pad = 24;
-        private const int Gap = 10;
-        private const int ActionHeight = 46;
-        private const int SmallButtonHeight = 32;
-        private const int ProgressHeight = 8;
-        private const int ChannelRowHeight = 26;
-        private const int TabStripHeight = 30;
-
-        /// <summary>Width of the "Channel:" caption in front of the channel picker.</summary>
-        private const int ChannelLabelWidth = 72;
+        private static int Pad => Theme.S(20);
+        private static int Gap => Theme.S(8);
+        private static int ActionHeight => Theme.S(50);
+        private static int SmallButtonHeight => Theme.S(32);
+        private static int ProgressHeight => Theme.S(12);
+        private static int TabStripHeight => Theme.S(32);
 
         /// <summary>Bullets shown in the "what's new" teaser; the full list lives in the dialog.</summary>
         private const int TeaserNoteCount = 3;
@@ -54,7 +47,7 @@ namespace FOEReLauncher
         private readonly LauncherService _service;
         private readonly string[] _args;
 
-        private readonly Label _titleLabel;
+        private readonly Control _titleLabel;
         private readonly Button _languageButton;
         private readonly TabStrip _tabs;
         private readonly Panel _gamePage;
@@ -73,6 +66,7 @@ namespace FOEReLauncher
         private readonly Button _patchNotesButton;
         private readonly Label _channelLabel;
         private readonly ComboBox _channelCombo;
+        private readonly FrameBox _channelBox;
         private readonly ProgressStripe _progress;
         private readonly Label _statusLabel;
         private readonly Label _versionLabel;
@@ -110,24 +104,27 @@ namespace FOEReLauncher
 
             BackColor = Background;
             ForeColor = BodyColor;
-            Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point);
-            AutoScaleMode = AutoScaleMode.Font;
+            Font = Theme.Font(9.75f);
+            AutoScaleMode = AutoScaleMode.None; // sizes go through Theme.S, fonts follow the DPI by themselves
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = false;
-            ClientSize = new Size(520, 640);
-            MinimumSize = new Size(Width - (ClientSize.Width - 460), Height);
+            ClientSize = FitToScreen(new Size(Theme.S(640), Theme.S(660)));
+            MinimumSize = new Size(Width - ClientSize.Width + Math.Min(ClientSize.Width, Theme.S(540)), Height - ClientSize.Height + Math.Min(ClientSize.Height, Theme.S(560)));
             DoubleBuffered = true;
+            Theme.DarkTitleBar(this);
+            KeyPreview = true;
 
-            _titleLabel = MakeLabel(string.Empty, 19.5f, FontStyle.Bold, TitleColor);
+            _titleLabel = new GlowLabel { Font = Theme.TitleFont(20f), ForeColor = TitleColor };
 
             // Never takes the keyboard focus: when the channel picker is disabled for a refresh, Windows moves the focus to
             // the next control, and a following Space or Enter must not switch the language.
-            _languageButton = MakeButton(string.Empty, Secondary, SecondaryText, 8.25f, FontStyle.Regular, selectable: false);
+            _languageButton = MakeButton(string.Empty, PipButtonKind.Normal, 9f, FontStyle.Bold, selectable: false);
             _languageButton.Click += OnLanguageClick;
 
             _tabs = new TabStrip { BackColor = Background, AccessibleName = "tabs" };
-            _gamePage = new Panel { BackColor = Background };
+            _gamePage = new ThemedPanel();
+            _gamePage.Paint += OnGamePagePaint;
             _modsPage = new ModsPage(_service);
             _cataloguePage = new CataloguePage(_service);
             _tabs.AddTab("tab.game", _gamePage);
@@ -140,38 +137,38 @@ namespace FOEReLauncher
             _installedLabel = MakeLabel(string.Empty, 11.25f, FontStyle.Regular, BodyColor);
             _availableLabel = MakeLabel(string.Empty, 11.25f, FontStyle.Regular, BodyColor);
 
-            _whatsNewTitle = MakeLabel(string.Empty, 9f, FontStyle.Bold, StatusColor);
+            _whatsNewTitle = MakeLabel(string.Empty, 9.75f, FontStyle.Bold, Theme.Amber);
             _whatsNewTitle.AutoSize = false;
             _whatsNewTitle.Visible = false;
 
-            _whatsNewBody = MakeLabel(string.Empty, 8.25f, FontStyle.Regular, StatusColor);
+            _whatsNewBody = MakeLabel(string.Empty, 9f, FontStyle.Regular, BodyColor);
             _whatsNewBody.AutoSize = false;
             _whatsNewBody.Visible = false;
 
-            _actionButton = MakeButton(string.Empty, Accent, Color.White, 12.75f, FontStyle.Bold);
+            _actionButton = MakeButton(string.Empty, PipButtonKind.Primary, 14f, FontStyle.Bold);
             _actionButton.Enabled = false;
             _actionButton.Click += OnActionClick;
 
             // An update never takes the Play button away: the installed version stays playable.
-            _gameUpdateButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _gameUpdateButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _gameUpdateButton.Visible = false;
             _gameUpdateButton.Click += OnGameUpdateClick;
 
-            _launcherUpdateButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _launcherUpdateButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _launcherUpdateButton.Visible = false;
             _launcherUpdateButton.Click += OnLauncherUpdateClick;
 
-            _checkUpdatesButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _checkUpdatesButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _checkUpdatesButton.Click += OnCheckUpdatesClick;
 
-            _verifyButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _verifyButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _verifyButton.Enabled = false;
             _verifyButton.Click += OnVerifyClick;
 
-            _folderButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _folderButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _folderButton.Click += OnFolderClick;
 
-            _patchNotesButton = MakeButton(string.Empty, Secondary, SecondaryText, 9.75f, FontStyle.Regular);
+            _patchNotesButton = MakeButton(string.Empty, PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _patchNotesButton.Enabled = false;
             _patchNotesButton.Click += OnPatchNotesClick;
 
@@ -182,7 +179,7 @@ namespace FOEReLauncher
             _channelCombo = MakeChannelCombo();
             _channelCombo.SelectedIndexChanged += OnChannelChanged;
 
-            _progress = new ProgressStripe { Visible = false, TrackColor = ProgressTrack, FillColor = Accent };
+            _progress = new ProgressStripe { Visible = false };
 
             _statusLabel = MakeLabel(string.Empty, 9.75f, FontStyle.Regular, StatusColor);
             _statusLabel.AutoSize = false;
@@ -200,6 +197,11 @@ namespace FOEReLauncher
                 _actionButton, _gameUpdateButton, _launcherUpdateButton, _checkUpdatesButton, _verifyButton, _folderButton,
                 _patchNotesButton, _channelLabel, _channelCombo, _progress, _statusLabel
             });
+            // The picker sits in a box that hides its system-coloured border.
+            _gamePage.Controls.Remove(_channelCombo);
+            _channelBox = new FrameBox(_channelCombo, 0) { ClipChild = true };
+            Theme.DarkCombo(_channelCombo);
+            _gamePage.Controls.Add(_channelBox);
             Controls.AddRange(new Control[] { _titleLabel, _languageButton, _tabs, _gamePage, _modsPage, _cataloguePage, _versionLabel });
 
             ApplyTexts();
@@ -219,25 +221,26 @@ namespace FOEReLauncher
             AutoSize = true,
             BackColor = Color.Transparent,
             ForeColor = color,
-            Font = new Font("Segoe UI", size, style, GraphicsUnit.Point),
+            Font = Theme.Font(size, style),
             UseMnemonic = false
         };
 
-        internal static Button MakeButton(string text, Color back, Color fore, float size, FontStyle style, bool selectable = true)
+        internal static PipButton MakeButton(string text, PipButtonKind kind, float size, FontStyle style, bool selectable = true)
         {
-            var button = selectable ? new Button() : new NoFocusButton();
+            var button = selectable ? new PipButton() : new NoFocusButton();
+            button.Kind = kind;
             button.Text = text;
-            button.BackColor = back;
-            button.ForeColor = fore;
-            button.FlatStyle = FlatStyle.Flat;
-            button.Font = new Font("Segoe UI", size, style, GraphicsUnit.Point);
-            button.UseVisualStyleBackColor = false;
-            button.UseMnemonic = false;
+            button.Font = Theme.Font(size, style);
             button.TabStop = selectable;
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(back, 0.12f);
-            button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(back, 0.05f);
             return button;
+        }
+
+        /// <summary>The wanted client size, made smaller when the screen's work area cannot hold it.</summary>
+        private Size FitToScreen(Size wanted)
+        {
+            var area = Screen.FromPoint(Cursor.Position).WorkingArea;
+            var chrome = Size - ClientSize;
+            return new Size(Math.Min(wanted.Width, area.Width - chrome.Width), Math.Min(wanted.Height, area.Height - chrome.Height));
         }
 
         /// <summary>
@@ -250,11 +253,11 @@ namespace FOEReLauncher
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = Secondary,
-                ForeColor = SecondaryText,
-                Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point),
+                BackColor = Theme.Fill,
+                ForeColor = Theme.Bright,
+                Font = Theme.Font(9.75f),
                 DrawMode = DrawMode.OwnerDrawFixed,
-                ItemHeight = 20,
+                ItemHeight = Theme.S(22),
                 IntegralHeight = false,
                 TabStop = true
             };
@@ -272,17 +275,23 @@ namespace FOEReLauncher
             }
 
             var selected = (e.State & DrawItemState.Selected) != 0;
-            using (var back = new SolidBrush(selected ? Accent : Secondary))
+            var edit = (e.State & DrawItemState.ComboBoxEdit) != 0;
+            using (var back = new SolidBrush(selected && !edit ? Theme.FillSelected : Theme.Fill))
             {
                 e.Graphics.FillRectangle(back, e.Bounds);
+            }
+
+            if (selected && !edit)
+            {
+                Theme.DrawFrame(e.Graphics, e.Bounds, Theme.Bright);
             }
 
             TextRenderer.DrawText(
                 e.Graphics,
                 Convert.ToString(_channelCombo.Items[e.Index]) ?? string.Empty,
                 _channelCombo.Font,
-                Rectangle.Inflate(e.Bounds, -3, 0),
-                selected ? Color.White : SecondaryText,
+                Rectangle.Inflate(e.Bounds, -Theme.S(5), 0),
+                Theme.Bright,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
         }
 
@@ -336,40 +345,29 @@ namespace FOEReLauncher
                 return;
             }
 
-            _titleLabel.Location = new Point(Pad, 16);
-            _languageButton.Bounds = new Rectangle(ClientSize.Width - Pad - 44, 22, 44, 26);
-            _tabs.Bounds = new Rectangle(Pad, _titleLabel.Bottom + 8, width, TabStripHeight);
+            var titleSize = TextRenderer.MeasureText(_titleLabel.Text, _titleLabel.Font);
+            _titleLabel.Bounds = new Rectangle(Pad - Theme.S(2), Theme.S(12), titleSize.Width + Theme.S(8), titleSize.Height + Theme.S(6));
+            var languageSize = new Size(Theme.S(48), Theme.S(28));
+            _languageButton.Bounds = new Rectangle(ClientSize.Width - Pad - languageSize.Width, _titleLabel.Top + ((_titleLabel.Height - languageSize.Height) / 2), languageSize.Width, languageSize.Height);
+            _tabs.Bounds = new Rectangle(Pad, _titleLabel.Bottom + Theme.S(8), width, TabStripHeight);
 
             var versionHeight = _versionLabel.Font.Height + 2;
-            _versionLabel.Bounds = new Rectangle(Pad, ClientSize.Height - Pad - versionHeight, width, versionHeight);
+            _versionLabel.Bounds = new Rectangle(Pad, ClientSize.Height - Theme.S(8) - versionHeight, width, versionHeight);
 
-            var pageTop = _tabs.Bottom + 6;
-            _tabs.LayoutPages(new Rectangle(Pad, pageTop, width, _versionLabel.Top - 6 - pageTop));
+            var pageTop = _tabs.Bottom + Theme.S(10);
+            _tabs.LayoutPages(new Rectangle(Pad, pageTop, width, _versionLabel.Top - Theme.S(4) - pageTop));
             LayoutGamePage(width);
+            Invalidate();
         }
+
+        /// <summary>The frame of the "what's new" block on the Game tab; empty when there is no block.</summary>
+        private Rectangle _whatsNewFrame;
 
         private void LayoutGamePage(int width)
         {
             var height = _gamePage.ClientSize.Height;
-            _installedLabel.Location = new Point(0, 8);
-            _availableLabel.Location = new Point(0, _installedLabel.Bottom + 4);
-
-            if (_whatsNewTitle.Visible)
-            {
-                var titleHeight = _whatsNewTitle.Font.Height + 2;
-                _whatsNewTitle.Bounds = new Rectangle(0, _availableLabel.Bottom + 14, width, titleHeight);
-
-                // One bullet per row: long lines are cut with an ellipsis and read in full in the dialog.
-                var shown = new List<string>();
-                foreach (var line in _whatsNewLines)
-                {
-                    shown.Add(Ellipsize(line, _whatsNewBody.Font, width - 2));
-                }
-
-                _whatsNewBody.Text = string.Join(Environment.NewLine, shown);
-                var rows = shown.Count < 1 ? 1 : shown.Count;
-                _whatsNewBody.Bounds = new Rectangle(0, _whatsNewTitle.Bottom + 4, width, (_whatsNewBody.Font.Height * rows) + 2);
-            }
+            _installedLabel.Location = new Point(0, 0);
+            _availableLabel.Location = new Point(0, _installedLabel.Bottom + Theme.S(2));
 
             var statusHeight = (_statusLabel.Font.Height * 3) + 2;
             _statusLabel.Bounds = new Rectangle(0, height - statusHeight, width, statusHeight);
@@ -388,7 +386,7 @@ namespace FOEReLauncher
             stack.Add(_checkUpdatesButton);
             stack.Add(_verifyButton);
             stack.Add(_patchNotesButton);
-            stack.Add(_channelCombo);
+            stack.Add(_channelBox);
             if (_progress.Visible)
             {
                 stack.Add(_progress);
@@ -400,15 +398,18 @@ namespace FOEReLauncher
                 total += HeightOf(control);
             }
 
-            var y = _statusLabel.Top - 10 - total;
+            var y = _statusLabel.Top - Theme.S(8) - total;
+            var stackTop = y;
             foreach (var control in stack)
             {
                 var h = HeightOf(control);
-                if (ReferenceEquals(control, _channelCombo))
+                if (ReferenceEquals(control, _channelBox))
                 {
                     // The caption shares the row with the picker instead of taking one of its own.
-                    _channelLabel.Bounds = new Rectangle(0, y, ChannelLabelWidth, h);
-                    control.Bounds = new Rectangle(ChannelLabelWidth, y, width - ChannelLabelWidth, h);
+                    var captionWidth = TextRenderer.MeasureText(_channelLabel.Text, _channelLabel.Font).Width + Theme.S(10);
+                    _channelLabel.Bounds = new Rectangle(0, y, captionWidth, h);
+                    _channelBox.Bounds = new Rectangle(captionWidth, y, width - captionWidth, h);
+                    _channelBox.LayoutChild();
                 }
                 else if (ReferenceEquals(control, _verifyButton))
                 {
@@ -423,6 +424,56 @@ namespace FOEReLauncher
                 }
 
                 y += h + Gap;
+            }
+
+            // "What's new" fills the space between the versions and the buttons, in a thin frame.
+            _whatsNewFrame = Rectangle.Empty;
+            if (_whatsNewTitle.Visible)
+            {
+                var top = _availableLabel.Bottom + Theme.S(12);
+                var frame = new Rectangle(0, top, width, Math.Max(0, stackTop - Theme.S(12) - top));
+                var inner = Rectangle.Inflate(frame, -Theme.S(12), -Theme.S(10));
+                var titleHeight = _whatsNewTitle.Font.Height + 2;
+                var lineHeight = _whatsNewBody.Font.Height;
+                if (inner.Height >= titleHeight + lineHeight)
+                {
+                    _whatsNewFrame = frame;
+                    _whatsNewTitle.Bounds = new Rectangle(inner.X, inner.Y, inner.Width, titleHeight);
+
+                    // One bullet per row: long lines are cut with an ellipsis and read in full in the dialog.
+                    var rows = Math.Max(1, (inner.Bottom - _whatsNewTitle.Bottom - Theme.S(4)) / lineHeight);
+                    var shown = new List<string>();
+                    foreach (var line in _whatsNewLines)
+                    {
+                        if (shown.Count < rows)
+                        {
+                            shown.Add(Ellipsize(line, _whatsNewBody.Font, inner.Width - 2));
+                        }
+                    }
+
+                    _whatsNewBody.Text = string.Join(Environment.NewLine, shown);
+                    _whatsNewBody.Bounds = new Rectangle(inner.X, _whatsNewTitle.Bottom + Theme.S(4), inner.Width, (lineHeight * Math.Max(1, shown.Count)) + 2);
+                }
+                else
+                {
+                    _whatsNewTitle.Bounds = Rectangle.Empty;
+                    _whatsNewBody.Bounds = Rectangle.Empty;
+                }
+            }
+
+            _gamePage.Invalidate();
+        }
+
+        private void OnGamePagePaint(object? sender, PaintEventArgs e)
+        {
+            if (!_whatsNewFrame.IsEmpty)
+            {
+                using (var back = new SolidBrush(Color.FromArgb(150, Theme.Panel)))
+                {
+                    e.Graphics.FillRectangle(back, _whatsNewFrame);
+                }
+
+                Theme.DrawFrame(e.Graphics, _whatsNewFrame, Theme.Frame);
             }
         }
 
@@ -454,13 +505,43 @@ namespace FOEReLauncher
                 return ActionHeight;
             }
 
-            if (ReferenceEquals(control, _channelCombo))
+            if (ReferenceEquals(control, _channelBox))
             {
-                return ChannelRowHeight;
+                return _channelBox.ChildHeight;
             }
 
             return ReferenceEquals(control, _progress) ? ProgressHeight : SmallButtonHeight;
         }
+
+        /// <summary>Ctrl+Tab and Ctrl+Shift+Tab walk the tabs, Ctrl+1..3 open one, as in other programs.</summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.Tab) || keyData == (Keys.Control | Keys.PageDown))
+            {
+                _tabs.Select((_tabs.SelectedIndex + 1) % _tabs.Count);
+                return true;
+            }
+
+            if (keyData == (Keys.Control | Keys.Shift | Keys.Tab) || keyData == (Keys.Control | Keys.PageUp))
+            {
+                _tabs.Select((_tabs.SelectedIndex + _tabs.Count - 1) % _tabs.Count);
+                return true;
+            }
+
+            if ((keyData & Keys.Modifiers) == Keys.Control)
+            {
+                var key = keyData & Keys.KeyCode;
+                if (key >= Keys.D1 && key < Keys.D1 + _tabs.Count)
+                {
+                    _tabs.Select(key - Keys.D1);
+                    return true;
+                }
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e) => Theme.PaintBackground(e.Graphics, ClientRectangle, Background, Point.Empty);
 
         // ------------------------------------------------------------ behaviour
 
@@ -1186,33 +1267,29 @@ namespace FOEReLauncher
         }
     }
 
-    /// <summary>A button that is clicked with the mouse only and never holds the keyboard focus.</summary>
-    public sealed class NoFocusButton : Button
-    {
-        public NoFocusButton()
-        {
-            SetStyle(ControlStyles.Selectable, false);
-        }
-    }
-
     /// <summary>
-    /// The tab strip above the page area: flat captions in the window's palette, the selected one
-    /// underlined in the accent colour. Each tab owns a page control; only the selected page is visible.
+    /// The tab strip above the page area, drawn as the PipBuck's tabs: framed boxes, the selected one lit with a
+    /// glowing caption. Each tab owns a page control; only the selected page is visible. It takes the keyboard
+    /// focus: Left and Right (or Home and End) choose a tab.
     /// </summary>
     public sealed class TabStrip : Control
     {
         private readonly List<KeyValuePair<string, Control>> _tabs = new List<KeyValuePair<string, Control>>();
         private readonly List<Rectangle> _hit = new List<Rectangle>();
         private int _selected;
+        private int _hover = -1;
 
         public TabStrip()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
-            Font = new Font("Segoe UI", 10.5f, FontStyle.Regular, GraphicsUnit.Point);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
+            Font = Theme.Font(10.5f);
             Cursor = Cursors.Hand;
+            TabStop = true;
         }
 
         public int SelectedIndex => _selected;
+
+        public int Count => _tabs.Count;
 
         public event EventHandler? SelectedChanged;
 
@@ -1249,6 +1326,50 @@ namespace FOEReLauncher
             }
         }
 
+        protected override bool IsInputKey(Keys keyData) =>
+            keyData == Keys.Left || keyData == Keys.Right || keyData == Keys.Home || keyData == Keys.End || base.IsInputKey(keyData);
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            var next = e.KeyCode == Keys.Left ? _selected - 1 : e.KeyCode == Keys.Right ? _selected + 1 : e.KeyCode == Keys.Home ? 0 : e.KeyCode == Keys.End ? _tabs.Count - 1 : -2;
+            if (next != -2 && next >= 0 && next < _tabs.Count && next != _selected)
+            {
+                Select(next);
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnGotFocus(EventArgs e)
+        {
+            base.OnGotFocus(e);
+            Invalidate();
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            base.OnLostFocus(e);
+            Invalidate();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            var hover = _hit.FindIndex(r => r.Contains(e.Location));
+            if (hover != _hover)
+            {
+                _hover = hover;
+                Invalidate();
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _hover = -1;
+            Invalidate();
+        }
+
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
@@ -1265,89 +1386,92 @@ namespace FOEReLauncher
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            using (var back = new SolidBrush(BackColor))
-            {
-                g.FillRectangle(back, ClientRectangle);
-            }
-
-            using (var line = new SolidBrush(MainForm.Secondary))
-            {
-                g.FillRectangle(line, new Rectangle(0, Height - 1, Width, 1));
-            }
+            var form = FindForm();
+            var origin = form == null ? Point.Empty : form.PointToClient(PointToScreen(Point.Empty));
+            Theme.PaintBackground(g, ClientRectangle, MainForm.Background, origin);
 
             _hit.Clear();
             var x = 0;
+            var gap = Theme.S(6);
             for (var i = 0; i < _tabs.Count; i++)
             {
                 var text = Texts.T(_tabs[i].Key);
                 var size = TextRenderer.MeasureText(text, Font, new Size(int.MaxValue, Height), TextFormatFlags.NoPrefix);
-                var rect = new Rectangle(x, 0, size.Width + 16, Height);
+                var rect = new Rectangle(x, 0, Math.Max(Theme.S(96), size.Width + Theme.S(28)), Height);
                 _hit.Add(rect);
                 var selected = i == _selected;
-                TextRenderer.DrawText(
-                    g,
-                    text,
-                    Font,
-                    rect,
-                    selected ? MainForm.TitleColor : MainForm.StatusColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
-                if (selected)
+                var hover = i == _hover;
+                Theme.FillGlow(g, rect, Theme.Hex(selected ? "#00A866" : hover ? "#005C37" : "#003D25"), Theme.Hex(selected ? "#003A24" : hover ? "#00180F" : "#000C07"));
+                Theme.DrawFrame(g, rect, selected || hover ? Theme.Bright : Theme.Hex("#0E8A58"));
+                const TextFormatFlags Flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
+                Theme.DrawGlowText(g, text, Font, rect, selected ? Theme.Hex("#E6FFF3") : Theme.Bright, Theme.Bright, Flags, selected ? Theme.S(2) : 0);
+                if (selected && Focused && ShowFocusCues)
                 {
-                    using (var accent = new SolidBrush(MainForm.Accent))
+                    using (var pen = new Pen(Color.FromArgb(170, Theme.Amber)) { DashStyle = DashStyle.Dot })
                     {
-                        g.FillRectangle(accent, new Rectangle(rect.X + 4, Height - 3, rect.Width - 8, 3));
+                        var f = Rectangle.Inflate(rect, -Theme.S(4), -Theme.S(4));
+                        g.DrawRectangle(pen, f.X, f.Y, f.Width - 1, f.Height - 1);
                     }
                 }
 
-                x = rect.Right + 8;
+                x = rect.Right + gap;
+            }
+
+            // The line under the tabs, as the frame of the PipBuck's page.
+            using (var line = new SolidBrush(Theme.Frame))
+            {
+                g.FillRectangle(line, new Rectangle(x, Height - 1, Math.Max(0, Width - x), 1));
             }
         }
     }
 
-    /// <summary>Modal window with the full published change history, same dark palette as the launcher.</summary>
+    /// <summary>Modal window with the full published change history, in the launcher's look.</summary>
     public sealed class PatchNotesForm : Form
     {
-        private const int Pad = 20;
-        private const int ButtonHeight = 32;
+        private static int Pad => Theme.S(16);
 
         private readonly RichTextBox _text;
+        private readonly FrameBox _textBox;
         private readonly Button _closeButton;
 
         /// <summary>Text colour of the versions the player has not installed yet and of their heading.</summary>
-        private static readonly Color NewColor = MainForm.Accent;
+        private static readonly Color NewColor = Theme.Amber;
 
         public PatchNotesForm(IEnumerable<PatchNote> notes, string? installedVersion = null)
         {
             Text = Texts.T("btn.notes");
             BackColor = MainForm.Background;
             ForeColor = MainForm.BodyColor;
-            Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point);
-            AutoScaleMode = AutoScaleMode.Font;
+            Font = Theme.Font(9.75f);
+            AutoScaleMode = AutoScaleMode.None;
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            ClientSize = new Size(540, 480);
-            MinimumSize = new Size(Width - (ClientSize.Width - 420), Height - (ClientSize.Height - 320));
+            ClientSize = new Size(Theme.S(560), Theme.S(480));
+            MinimumSize = new Size(Width - ClientSize.Width + Theme.S(420), Height - ClientSize.Height + Theme.S(320));
+            Theme.DarkTitleBar(this);
 
             _text = new RichTextBox
             {
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
-                BackColor = ColorTranslator.FromHtml("#181B23"),
+                BackColor = Theme.Panel,
                 ForeColor = MainForm.BodyColor,
-                Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point),
+                Font = Theme.Font(10f),
                 ScrollBars = RichTextBoxScrollBars.Vertical,
                 DetectUrls = false,
                 TabStop = false
             };
+            Theme.DarkScrollBars(_text);
             Fill(_text, Render(NotesSplit.Split(notes, installedVersion)));
+            _textBox = new FrameBox(_text, 8);
 
-            _closeButton = MainForm.MakeButton(Texts.T("btn.close"), MainForm.Secondary, MainForm.SecondaryText, 9.75f, FontStyle.Regular);
+            _closeButton = MainForm.MakeButton(Texts.T("btn.close"), PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             _closeButton.DialogResult = DialogResult.OK;
 
-            Controls.Add(_text);
+            Controls.Add(_textBox);
             Controls.Add(_closeButton);
             AcceptButton = _closeButton;
             CancelButton = _closeButton;
@@ -1482,14 +1606,19 @@ namespace FOEReLauncher
                 return;
             }
 
-            _closeButton.Bounds = new Rectangle(ClientSize.Width - Pad - 120, ClientSize.Height - Pad - ButtonHeight, 120, ButtonHeight);
-            _text.Bounds = new Rectangle(Pad, Pad, width, _closeButton.Top - 14 - Pad);
+            var buttonHeight = Theme.S(32);
+            var buttonWidth = Math.Max(Theme.S(120), TextRenderer.MeasureText(_closeButton.Text, _closeButton.Font).Width + Theme.S(32));
+            _closeButton.Bounds = new Rectangle(ClientSize.Width - Pad - buttonWidth, ClientSize.Height - Pad - buttonHeight, buttonWidth, buttonHeight);
+            _textBox.Bounds = new Rectangle(Pad, Pad, width, _closeButton.Top - Theme.S(12) - Pad);
+            _textBox.LayoutChild();
         }
+
+        protected override void OnPaintBackground(PaintEventArgs e) => Theme.PaintBackground(e.Graphics, ClientRectangle, BackColor, Point.Empty);
     }
 
     /// <summary>
-    /// Flat progress bar: the stock WinForms one ignores custom colours under visual styles,
-    /// and the launcher needs the accent blue on the dark track.
+    /// The progress bar as the game's loading bar: a thin frame and a fill of green segments. The stock WinForms
+    /// bar ignores custom colours under visual styles.
     /// </summary>
     public sealed class ProgressStripe : Control
     {
@@ -1500,10 +1629,6 @@ namespace FOEReLauncher
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
             TabStop = false;
         }
-
-        public Color TrackColor { get; set; } = Color.FromArgb(0x23, 0x27, 0x34);
-
-        public Color FillColor { get; set; } = Color.FromArgb(0x3D, 0x6F, 0xF5);
 
         /// <summary>Progress in percent, 0..100.</summary>
         public double Value
@@ -1525,21 +1650,31 @@ namespace FOEReLauncher
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            using (var track = new SolidBrush(TrackColor))
+            var r = ClientRectangle;
+            using (var track = new SolidBrush(Theme.Panel))
             {
-                g.FillRectangle(track, ClientRectangle);
+                g.FillRectangle(track, r);
             }
 
-            var filled = (int)Math.Round(ClientRectangle.Width * (_value / 100d));
-            if (filled <= 0)
+            Theme.DrawFrame(g, r, Theme.Frame);
+            var inner = Rectangle.Inflate(r, -2, -2);
+            var filled = (int)Math.Round(inner.Width * (_value / 100d));
+            if (filled <= 0 || inner.Height <= 0)
             {
                 return;
             }
 
-            using (var fill = new SolidBrush(FillColor))
+            var segment = Math.Max(4, Theme.S(8));
+            var gap = Math.Max(1, Theme.S(2));
+            using (var fill = new SolidBrush(Theme.Bright))
+            using (var glow = new SolidBrush(Color.FromArgb(70, Theme.Bright)))
             {
-                g.FillRectangle(fill, new Rectangle(0, 0, filled, ClientRectangle.Height));
+                g.FillRectangle(glow, new Rectangle(inner.X, inner.Y, filled, inner.Height));
+                for (var x = inner.X; x < inner.X + filled; x += segment + gap)
+                {
+                    var w = Math.Min(segment, inner.X + filled - x);
+                    g.FillRectangle(fill, new Rectangle(x, inner.Y + 1, w, Math.Max(1, inner.Height - 2)));
+                }
             }
         }
     }

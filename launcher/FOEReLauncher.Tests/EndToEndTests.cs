@@ -119,6 +119,9 @@ namespace FOEReLauncher.Tests
             }
         }
 
+        /// <summary>--catalogue-mods of the next packs (null: the script's default, every mod left out).</summary>
+        public string? CatalogueMods { get; set; }
+
         /// <summary>Packs <paramref name="build"/> as <paramref name="version"/> and makes it the live site.</summary>
         public string Publish(string build, string version, string channel = "prod", string? launcher = null)
         {
@@ -132,7 +135,8 @@ namespace FOEReLauncher.Tests
                        "\" --version " + version + " --channel " + channel + " --base-url " + BaseUrl + name + "/" +
                        " --notes-ru \"" + notesRu + "\" --notes-en \"" + notesEn + "\"" +
                        (_prev != null ? " --prev \"" + _prev + "\"" : string.Empty) +
-                       (launcher != null ? " --launcher \"" + launcher + "\"" : string.Empty);
+                       (launcher != null ? " --launcher \"" + launcher + "\"" : string.Empty) +
+                       (CatalogueMods != null ? " --catalogue-mods \"" + CatalogueMods + "\"" : string.Empty);
             Assert.Equal(0, Run("python", args, _log));
             _prev = outDir;
 
@@ -271,7 +275,7 @@ namespace FOEReLauncher.Tests
             _build.Write("Content/classic/music/menu.mp3", "music");
             _build.Write("Content/classic/defs/units.json", "{}");
             _build.Write("Content/reborn/defs/padlayout.json", "{}");
-            _build.Write("Mods/reborn_home/mod.json", "{\"id\":\"reborn_home\"}");
+            _build.Write("Mod examples.zip", "examples archive");
             if (bigBytes > 0)
             {
                 var data = new byte[bigBytes];
@@ -306,6 +310,8 @@ namespace FOEReLauncher.Tests
         [Fact]
         public async Task Install_Update_Remove_UserFiles_Verify()
         {
+            // This build may ship files under Mods/ (step 4), as a build packed with --catalogue-mods "" does.
+            _site.CatalogueMods = string.Empty;
             MakeFakeGame();
             _site.Publish(_build.Path, "v0.1.1");
             _site.Start();
@@ -476,6 +482,18 @@ namespace FOEReLauncher.Tests
             Assert.Equal("fake exe v1", File.ReadAllText(Game("FOEReborn.exe")));
             Assert.False(File.Exists(Game("created.txt")));
             Assert.False(File.Exists(u.JournalFile));
+        }
+
+        [Fact]
+        public void DefaultPack_LeavesEveryModOut()
+        {
+            MakeFakeGame();
+            _build.Write("Mods/reborn_home/package.json", "{\"id\":\"reborn_home\",\"version\":\"1.0.0\"}");
+            _build.Write("Mods/examples/ex/package.json", "{\"id\":\"ex\",\"version\":\"1.0.0\"}");
+            _site.Publish(_build.Path, "v0.1.1");
+            var manifest = File.ReadAllText(_site.Work.Sub("site/downloads/manifest.json"));
+            Assert.DoesNotContain("\"Mods/", manifest);
+            Assert.Contains("\"Mod examples.zip\"", manifest);
         }
 
         [Fact]

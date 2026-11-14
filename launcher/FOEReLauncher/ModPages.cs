@@ -4,83 +4,62 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FOEReLauncher
 {
-    /// <summary>Shared look of the mod pages: dark list, dark details box, the window's buttons.</summary>
+    /// <summary>Shared look of the mod pages: framed lists and details boxes, the window's buttons.</summary>
     internal static class ModUi
     {
-        internal static readonly Color Panel = ColorTranslator.FromHtml("#181B23");
-        internal static readonly Color Header = ColorTranslator.FromHtml("#20242E");
-        internal static readonly Color Bad = ColorTranslator.FromHtml("#F0646E");
-        internal static readonly Color Good = ColorTranslator.FromHtml("#7CC88A");
-        internal const int ButtonHeight = 30;
-        internal const int Gap = 8;
+        internal static readonly Color Panel = Theme.Panel;
+        internal static readonly Color Bad = Theme.Bad;
+        internal static readonly Color Good = Theme.Bright;
 
-        internal static ListView MakeList(bool checkBoxes)
+        internal static int ButtonHeight => Theme.S(32);
+
+        internal static int Gap => Theme.S(8);
+
+        /// <summary>The tag of a group's header row (mod ids never start with '#').</summary>
+        internal static string GroupTag(string groupId) => "#" + groupId;
+
+        internal static string? GroupOfTag(object? tag) => tag is string s && s.StartsWith("#", StringComparison.Ordinal) ? s.Substring(1) : null;
+
+        internal static RichTextBox MakeDetails()
         {
-            var list = new ListView
+            var box = new RichTextBox
             {
-                View = View.Details,
-                FullRowSelect = true,
-                MultiSelect = false,
-                HideSelection = false,
-                CheckBoxes = checkBoxes,
+                ReadOnly = true,
                 BorderStyle = BorderStyle.None,
                 BackColor = Panel,
-                ForeColor = MainForm.BodyColor,
-                HeaderStyle = ColumnHeaderStyle.Nonclickable,
-                OwnerDraw = true,
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular, GraphicsUnit.Point)
+                ForeColor = Theme.Body,
+                Font = Theme.Font(9.75f),
+                ScrollBars = RichTextBoxScrollBars.Vertical,
+                DetectUrls = false,
+                TabStop = false
             };
-
-            // The stock header is light grey under visual styles: draw it in the window's palette, rows as usual.
-            list.DrawColumnHeader += (s, e) =>
-            {
-                using (var back = new SolidBrush(Header))
-                {
-                    e.Graphics.FillRectangle(back, e.Bounds);
-                }
-
-                TextRenderer.DrawText(e.Graphics, e.Header?.Text ?? string.Empty, list.Font, Rectangle.Inflate(e.Bounds, -4, 0), MainForm.StatusColor,
-                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
-            };
-            list.DrawItem += (s, e) => e.DrawDefault = true;
-            list.DrawSubItem += (s, e) => e.DrawDefault = true;
-            return list;
+            Theme.DarkScrollBars(box);
+            return box;
         }
 
-        internal static RichTextBox MakeDetails() => new RichTextBox
-        {
-            ReadOnly = true,
-            BorderStyle = BorderStyle.None,
-            BackColor = Panel,
-            ForeColor = MainForm.BodyColor,
-            Font = new Font("Segoe UI", 9f, FontStyle.Regular, GraphicsUnit.Point),
-            ScrollBars = RichTextBoxScrollBars.Vertical,
-            DetectUrls = false,
-            TabStop = false
-        };
-
-        internal static Label MakeLine(float size = 9f) => new Label
+        internal static Label MakeLine(float size = 9.75f) => new Label
         {
             AutoSize = false,
             BackColor = Color.Transparent,
-            ForeColor = MainForm.StatusColor,
-            Font = new Font("Segoe UI", size, FontStyle.Regular, GraphicsUnit.Point),
+            ForeColor = Theme.Dim,
+            Font = Theme.Font(size),
             UseMnemonic = false
         };
 
-        internal static Button MakeButton() => MainForm.MakeButton(string.Empty, MainForm.Secondary, MainForm.SecondaryText, 9f, FontStyle.Regular);
+        internal static PipButton MakeButton(PipButtonKind kind = PipButtonKind.Normal) => MainForm.MakeButton(string.Empty, kind, 9.75f, FontStyle.Regular);
 
         internal static void Append(RichTextBox box, string text, Color? color = null, bool bold = false)
         {
             box.SelectionStart = box.TextLength;
             box.SelectionLength = 0;
-            box.SelectionColor = color ?? MainForm.BodyColor;
+            box.SelectionColor = color ?? Theme.Body;
             box.SelectionFont = new Font(box.Font, bold ? FontStyle.Bold : FontStyle.Regular);
             box.AppendText(text + Environment.NewLine);
         }
@@ -130,20 +109,310 @@ namespace FOEReLauncher
             }
         }
 
+        /// <summary>A column wide enough for its caption and the widest of the given cell texts.</summary>
+        internal static int ColumnWidth(Control list, int min, params string[] texts) =>
+            Math.Max(Theme.S(min), texts.Select(t => TextRenderer.MeasureText(t, list.Font).Width).DefaultIfEmpty(0).Max() + Theme.S(16));
+
         internal static string ErrorText(Exception ex) =>
             ex is ModOperationException m ? m.Text : ex is InvalidDataException ? Texts.T("mods.err.hash") : ex.Message;
+
+        /// <summary>Up to <paramref name="max"/> names joined by commas, then "and N more".</summary>
+        internal static string Names(IEnumerable<string> names, int max = 6)
+        {
+            var list = names.ToList();
+            return list.Count <= max ? string.Join(", ", list) : string.Join(", ", list.Take(max)) + " " + Texts.T("names.more", list.Count - max);
+        }
+    }
+
+    /// <summary>How one row of a <see cref="PipList"/> is drawn.</summary>
+    internal sealed class RowLook
+    {
+        public bool IsGroup { get; set; }
+
+        public bool Open { get; set; } = true;
+
+        public bool Indent { get; set; }
+
+        public CheckState Check { get; set; }
+
+        public bool CheckEnabled { get; set; } = true;
+
+        public bool Code { get; set; }
+
+        public Color Color { get; set; } = Theme.Body;
+
+        /// <summary>Colour of the last column (state), when it differs.</summary>
+        public Color? StateColor { get; set; }
+    }
+
+    /// <summary>
+    /// The mod list in the PipBuck's look: framed rows, yellow column captions, group header rows with a triangle that
+    /// opens and closes them. Group rows open and close with a click on the triangle, a double click, Enter, or the
+    /// Left and Right keys.
+    /// </summary>
+    internal sealed class PipList : ListView
+    {
+        private const int LVM_GETHEADER = 0x101F;
+
+        private readonly Dictionary<string, RowLook> _looks = new Dictionary<string, RowLook>(StringComparer.Ordinal);
+
+        public PipList(bool checkBoxes)
+        {
+            View = View.Details;
+            FullRowSelect = true;
+            MultiSelect = false;
+            HideSelection = false;
+            CheckBoxes = checkBoxes;
+            BorderStyle = BorderStyle.None;
+            BackColor = Theme.Panel;
+            ForeColor = Theme.Body;
+            HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            OwnerDraw = true;
+            Font = Theme.Font(9.75f);
+            // The row height comes from the small image list; the images themselves are not used.
+            SmallImageList = new ImageList { ImageSize = new Size(1, Math.Max(16, Theme.S(26))) };
+            Theme.DarkScrollBars(this);
+            HandleCreated += (s, e) =>
+            {
+                var header = SendMessage(Handle, LVM_GETHEADER, IntPtr.Zero, IntPtr.Zero);
+                if (header != IntPtr.Zero)
+                {
+                    SetHeaderTheme(header);
+                }
+            };
+        }
+
+        /// <summary>A group header asks to open or close (its id).</summary>
+        public event Action<string>? GroupToggle;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr w, IntPtr l);
+
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetWindowTheme(IntPtr hwnd, string? appName, string? idList);
+
+        private static void SetHeaderTheme(IntPtr header)
+        {
+            try
+            {
+                SetWindowTheme(header, "DarkMode_ItemsView", null);
+            }
+            catch (Exception ex) when (ex is DllNotFoundException || ex is EntryPointNotFoundException)
+            {
+                // No themes.
+            }
+        }
+
+        public void SetLook(string tag, RowLook look) => _looks[tag] = look;
+
+        public void ClearLooks() => _looks.Clear();
+
+        private RowLook LookOf(ListViewItem item) => item.Tag is string t && _looks.TryGetValue(t, out var l) ? l : new RowLook();
+
+        private Rectangle CheckRect(ListViewItem item, Rectangle row)
+        {
+            var label = item.GetBounds(ItemBoundsPortion.Label);
+            var size = Math.Max(10, Math.Min(Theme.S(15), row.Height - Theme.S(8)));
+            var areaRight = Math.Max(row.X + size + 4, label.X - 2);
+            var x = row.X + Math.Max(2, ((areaRight - row.X) - size) / 2);
+            return new Rectangle(x, row.Y + ((row.Height - size) / 2), size, size);
+        }
+
+        private Rectangle ChevronRect(ListViewItem item, Rectangle row)
+        {
+            var label = item.GetBounds(ItemBoundsPortion.Label);
+            var start = CheckBoxes ? label.X : row.X + Theme.S(4);
+            return new Rectangle(start, row.Y, Theme.S(18), row.Height);
+        }
+
+        protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
+        {
+            using (var back = new SolidBrush(Theme.Background))
+            {
+                e.Graphics.FillRectangle(back, e.Bounds);
+            }
+
+            using (var line = new SolidBrush(Theme.Frame))
+            {
+                e.Graphics.FillRectangle(line, new Rectangle(e.Bounds.X, e.Bounds.Bottom - 1, e.Bounds.Width, 1));
+            }
+
+            var r = Rectangle.Inflate(e.Bounds, -Theme.S(6), 0);
+            if (e.ColumnIndex == 0)
+            {
+                r.X += CheckBoxes ? Theme.S(20) : Theme.S(4);
+                r.Width -= CheckBoxes ? Theme.S(20) : Theme.S(4);
+            }
+
+            TextRenderer.DrawText(e.Graphics, e.Header?.Text ?? string.Empty, Font, r, Theme.Amber,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+        }
+
+        protected override void OnDrawItem(DrawListViewItemEventArgs e)
+        {
+            var look = LookOf(e.Item);
+            var row = e.Bounds;
+            var selected = e.Item.Selected;
+            using (var back = new SolidBrush(selected ? Theme.FillSelected : look.IsGroup ? Theme.GroupFill : Theme.Panel))
+            {
+                e.Graphics.FillRectangle(back, row);
+            }
+
+            // The PipBuck's rows: each in a thin frame, the chosen one in a bright one.
+            var frame = new Rectangle(row.X + 1, row.Y + 1, row.Width - 2, row.Height - 2);
+            Theme.DrawFrame(e.Graphics, frame, selected ? (Focused ? Theme.Bright : Theme.FrameBright) : look.IsGroup ? Theme.Hex("#0E7A50") : Theme.Hex("#063A26"));
+            if (CheckBoxes)
+            {
+                Theme.DrawCheck(e.Graphics, CheckRect(e.Item, row), look.IsGroup ? look.Check : e.Item.Checked ? CheckState.Checked : CheckState.Unchecked, look.CheckEnabled);
+            }
+        }
+
+        protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+        {
+            if (e.Item == null || e.SubItem == null)
+            {
+                return;
+            }
+
+            var look = LookOf(e.Item);
+            var cell = e.Bounds;
+            const TextFormatFlags Flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
+            if (e.ColumnIndex == 0)
+            {
+                var label = e.Item.GetBounds(ItemBoundsPortion.Label);
+                var x = CheckBoxes ? label.X : cell.X + Theme.S(4);
+                if (look.IsGroup)
+                {
+                    var chevron = ChevronRect(e.Item, cell);
+                    Theme.DrawChevron(e.Graphics, chevron, look.Open, Theme.Bright);
+                    x = chevron.Right + Theme.S(2);
+                }
+                else if (look.Indent)
+                {
+                    x += Theme.S(20);
+                }
+
+                var right = cell.Right - Theme.S(4);
+                if (look.Code)
+                {
+                    var tag = Texts.T("cat.kind.code");
+                    var size = TextRenderer.MeasureText(tag, Font, new Size(int.MaxValue, cell.Height), TextFormatFlags.NoPrefix);
+                    var tagRect = new Rectangle(right - size.Width - Theme.S(6), cell.Y + ((cell.Height - size.Height) / 2) - 1, size.Width + Theme.S(6), size.Height + 2);
+                    Theme.DrawFrame(e.Graphics, tagRect, Color.FromArgb(150, Theme.Amber));
+                    TextRenderer.DrawText(e.Graphics, tag, Font, tagRect, Theme.Amber, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                    right = tagRect.Left - Theme.S(4);
+                }
+
+                using (var font = look.IsGroup ? new Font(Font, FontStyle.Bold) : null)
+                {
+                    var color = look.IsGroup ? Theme.Bright : look.Color;
+                    var r = new Rectangle(x, cell.Y, Math.Max(0, right - x), cell.Height);
+                    if (look.IsGroup || e.Item.Selected)
+                    {
+                        Theme.DrawGlowText(e.Graphics, e.SubItem.Text, font ?? Font, r, color, Theme.Bright, Flags, look.IsGroup ? 1 : 0);
+                    }
+                    else
+                    {
+                        TextRenderer.DrawText(e.Graphics, e.SubItem.Text, font ?? Font, r, color, Flags);
+                    }
+                }
+
+                return;
+            }
+
+            var last = e.ColumnIndex == e.Item.SubItems.Count - 1;
+            var c = last && look.StateColor.HasValue ? look.StateColor.Value : look.IsGroup ? Theme.Dim : look.Color;
+            TextRenderer.DrawText(e.Graphics, e.SubItem.Text, Font, Rectangle.Inflate(cell, -Theme.S(6), 0), c, Flags);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            var hit = HitTest(e.Location);
+            var group = ModUi.GroupOfTag(hit.Item?.Tag);
+            if (hit.Item != null && group != null && e.Button == MouseButtons.Left && ChevronRect(hit.Item, hit.Item.Bounds).Contains(e.Location))
+            {
+                hit.Item.Selected = true;
+                hit.Item.Focused = true;
+                GroupToggle?.Invoke(group);
+                return;
+            }
+
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            var hit = HitTest(e.Location);
+            var group = ModUi.GroupOfTag(hit.Item?.Tag);
+            if (group != null && !(CheckBoxes && hit.Item != null && CheckRect(hit.Item, hit.Item.Bounds).Contains(e.Location)))
+            {
+                GroupToggle?.Invoke(group);
+                return;
+            }
+
+            base.OnMouseDoubleClick(e);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            var item = SelectedItems.Count > 0 ? SelectedItems[0] : null;
+            var group = ModUi.GroupOfTag(item?.Tag);
+            if (item != null && group != null)
+            {
+                var look = LookOf(item);
+                if ((e.KeyCode == Keys.Left && look.Open) || (e.KeyCode == Keys.Right && !look.Open) || e.KeyCode == Keys.Enter)
+                {
+                    GroupToggle?.Invoke(group);
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (item != null && e.KeyCode == Keys.Left && LookOf(item).Indent)
+            {
+                // Left on a member goes to its group's header.
+                for (var i = item.Index - 1; i >= 0; i--)
+                {
+                    if (ModUi.GroupOfTag(Items[i].Tag) != null)
+                    {
+                        Items[i].Selected = true;
+                        Items[i].Focused = true;
+                        Items[i].EnsureVisible();
+                        e.Handled = true;
+                        return;
+                    }
+                }
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnGotFocus(EventArgs e)
+        {
+            base.OnGotFocus(e);
+            Invalidate();
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            base.OnLostFocus(e);
+            Invalidate();
+        }
     }
 
     /// <summary>
     /// The Mods tab: the game's mod manager on the same settings.json. Changes are saved at once, as the game
-    /// does; while the game runs the list is read-only.
+    /// does; while the game runs the list is read-only. Mods of a group are listed under the group's row, whose box
+    /// switches the whole group.
     /// </summary>
-    public sealed class ModsPage : Panel
+    public sealed class ModsPage : ThemedPanel
     {
         private readonly LauncherService _service;
         private readonly Label _hint;
-        private readonly ListView _list;
+        private readonly Label _examples;
+        private readonly PipList _list;
+        private readonly FrameBox _listBox;
         private readonly RichTextBox _details;
+        private readonly FrameBox _detailsBox;
         private readonly Button _upButton;
         private readonly Button _downButton;
         private readonly Button _refreshButton;
@@ -152,6 +421,9 @@ namespace FOEReLauncher
 
         private List<ModPackage> _packages = new List<ModPackage>();
         private ModSelection _selection = new ModSelection();
+        private List<ModBlock<string>> _blocks = new List<ModBlock<string>>();
+        private readonly Dictionary<string, ModGroupInfo> _groups = new Dictionary<string, ModGroupInfo>(StringComparer.Ordinal);
+        private readonly HashSet<string> _closed = new HashSet<string>(StringComparer.Ordinal);
         private bool _filling;
         private bool _running;
         private Func<string> _statusText = () => string.Empty;
@@ -159,17 +431,19 @@ namespace FOEReLauncher
         public ModsPage(LauncherService service)
         {
             _service = service;
-            BackColor = MainForm.Background;
-            _hint = ModUi.MakeLine(8.25f);
-            _list = ModUi.MakeList(checkBoxes: true);
+            _hint = ModUi.MakeLine(9f);
+            _examples = ModUi.MakeLine(9f);
+            _list = new PipList(checkBoxes: true);
             _list.Columns.Add(string.Empty, 150);
-            _list.Columns.Add(string.Empty, 58);
-            _list.Columns.Add(string.Empty, 46);
-            _list.Columns.Add(string.Empty, 104);
-            _list.Columns.Add(string.Empty, 96);
+            _list.Columns.Add(string.Empty, 60);
+            _list.Columns.Add(string.Empty, 110);
+            _list.Columns.Add(string.Empty, 110);
             _list.ItemCheck += OnItemCheck;
             _list.SelectedIndexChanged += (s, e) => ShowDetails();
+            _list.GroupToggle += ToggleOpen;
+            _listBox = new FrameBox(_list, 1);
             _details = ModUi.MakeDetails();
+            _detailsBox = new FrameBox(_details, 8);
             _upButton = ModUi.MakeButton();
             _upButton.Click += (s, e) => MoveSelected(-1);
             _downButton = ModUi.MakeButton();
@@ -179,7 +453,7 @@ namespace FOEReLauncher
             _folderButton = ModUi.MakeButton();
             _folderButton.Click += (s, e) => OpenFolder();
             _status = ModUi.MakeLine();
-            Controls.AddRange(new Control[] { _hint, _list, _details, _upButton, _downButton, _refreshButton, _folderButton, _status });
+            Controls.AddRange(new Control[] { _hint, _examples, _listBox, _detailsBox, _upButton, _downButton, _refreshButton, _folderButton, _status });
             Resize += (s, e) => LayoutPage();
         }
 
@@ -189,17 +463,18 @@ namespace FOEReLauncher
         public void ApplyTexts()
         {
             _hint.Text = Texts.T("mods.hint");
+            _examples.Text = Texts.T("mods.examples", ModService.ExamplesArchive);
             _list.Columns[0].Text = Texts.T("mods.col.name");
             _list.Columns[1].Text = Texts.T("mods.col.version");
-            _list.Columns[2].Text = Texts.T("cat.col.kind");
-            _list.Columns[3].Text = Texts.T("mods.col.source");
-            _list.Columns[4].Text = Texts.T("mods.col.state");
+            _list.Columns[2].Text = Texts.T("mods.col.source");
+            _list.Columns[3].Text = Texts.T("mods.col.state");
             _upButton.Text = Texts.T("mods.btn.up");
             _downButton.Text = Texts.T("mods.btn.down");
             _refreshButton.Text = Texts.T("mods.btn.refresh");
             _folderButton.Text = Texts.T("mods.btn.folder");
-            Fill(SelectedId());
+            Fill(SelectedTag());
             ShowStatus();
+            LayoutPage();
         }
 
         public void LayoutPage()
@@ -211,16 +486,27 @@ namespace FOEReLauncher
                 return;
             }
 
-            _hint.Bounds = new Rectangle(0, 4, width, (_hint.Font.Height * 3) + 2);
+            var hintHeight = TextRenderer.MeasureText(_hint.Text, _hint.Font, new Size(width, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
+            _hint.Bounds = new Rectangle(0, 0, width, hintHeight + 2);
+            var examples = _service.IsGameInstalled() && _service.Mods.HasExamplesArchive;
+            _examples.Visible = examples;
+            _examples.Bounds = new Rectangle(0, _hint.Bottom, width, examples ? TextRenderer.MeasureText(_examples.Text, _examples.Font, new Size(width, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height + 2 : 0);
             var statusHeight = (_status.Font.Height * 2) + 2;
             _status.Bounds = new Rectangle(0, height - statusHeight, width, statusHeight);
-            var rowY = _status.Top - 6 - ModUi.ButtonHeight;
+            var rowY = _status.Top - Theme.S(6) - ModUi.ButtonHeight;
             ModUi.Row(rowY, width, _upButton, _downButton, _refreshButton, _folderButton);
-            var detailsHeight = 130;
-            _details.Bounds = new Rectangle(0, rowY - 8 - detailsHeight, width, detailsHeight);
-            _list.Bounds = new Rectangle(0, _hint.Bottom + 4, width, _details.Top - 8 - _hint.Bottom - 4);
-            var fixedWidth = 58 + 46 + 104 + 96 + SystemInformation.VerticalScrollBarWidth + 4;
-            _list.Columns[0].Width = Math.Max(120, width - fixedWidth);
+            // The list keeps at least two thirds of the room above the buttons; the details box takes the rest.
+            var detailsHeight = Math.Max(Theme.S(64), Math.Min(Theme.S(140), (rowY - _examples.Bottom) / 3));
+            _detailsBox.Bounds = new Rectangle(0, rowY - Theme.S(8) - detailsHeight, width, detailsHeight);
+            _detailsBox.LayoutChild();
+            var top = _examples.Bottom + Theme.S(6);
+            _listBox.Bounds = new Rectangle(0, top, width, Math.Max(Theme.S(60), _detailsBox.Top - Theme.S(8) - top));
+            _listBox.LayoutChild();
+            _list.Columns[1].Width = ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10");
+            _list.Columns[2].Width = ModUi.ColumnWidth(_list, 110, _list.Columns[2].Text, Texts.T("mods.src.game"), Texts.T("mods.src.catalogue"), Texts.T("mods.src.hand"));
+            _list.Columns[3].Width = ModUi.ColumnWidth(_list, 110, _list.Columns[3].Text, Texts.T("mods.st.on"), Texts.T("mods.st.off"), Texts.T("mods.st.noconsent"));
+            var fixedWidth = _list.Columns[1].Width + _list.Columns[2].Width + _list.Columns[3].Width + SystemInformation.VerticalScrollBarWidth + Theme.S(2);
+            _list.Columns[0].Width = Math.Max(Theme.S(140), _list.Width - fixedWidth);
         }
 
         public void SetGameRunning(bool running)
@@ -238,27 +524,51 @@ namespace FOEReLauncher
                 return;
             }
 
-            ApplyEnabled();
+            Fill(SelectedTag());
             ShowStatus();
         }
 
         /// <summary>Reads the folder and the settings again, as the game does at its start.</summary>
         public void Reload()
         {
-            var id = SelectedId();
+            var tag = SelectedTag();
             _packages = _service.IsGameInstalled() ? _service.Mods.Scan(out _selection) : new List<ModPackage>();
             if (!_service.IsGameInstalled())
             {
                 _selection = new ModSelection();
             }
 
-            Fill(id);
+            Fill(tag);
             SetStatus(null);
         }
 
-        private string? SelectedId() => _list.SelectedItems.Count > 0 ? _list.SelectedItems[0].Tag as string : null;
+        private string? SelectedTag() => _list.SelectedItems.Count > 0 ? _list.SelectedItems[0].Tag as string : null;
+
+        private string? SelectedId() => SelectedTag() is string t && ModUi.GroupOfTag(t) == null ? t : null;
+
+        private string? SelectedGroup() => ModUi.GroupOfTag(SelectedTag());
 
         private IList<ModPackage> Listed() => ModRules.ListOrder(_packages, _selection);
+
+        private void ToggleOpen(string group)
+        {
+            if (!_closed.Remove(group))
+            {
+                _closed.Add(group);
+            }
+
+            Fill(ModUi.GroupTag(group));
+        }
+
+        /// <summary>The members of a group that the list shows (no duplicates or Content packages).</summary>
+        private List<string> Members(string group) => _blocks.FirstOrDefault(b => b.GroupId == group)?.Items ?? new List<string>();
+
+        private CheckState GroupCheck(string group)
+        {
+            var members = Members(group);
+            var on = members.Count(id => _selection.IsEnabled(id));
+            return on == 0 ? CheckState.Unchecked : on == members.Count ? CheckState.Checked : CheckState.Indeterminate;
+        }
 
         private void Fill(string? select)
         {
@@ -267,24 +577,60 @@ namespace FOEReLauncher
             try
             {
                 _list.Items.Clear();
+                _list.ClearLooks();
                 var game = _service.Mods.GameState();
                 var record = _service.Mods.LoadRecord();
-                foreach (var p in Listed())
+                var listed = Listed();
+                _blocks = ModGroups.Arrange(listed.Select(p => p.Id), id => _service.Mods.GroupOf(listed.First(p => p.Id == id), record));
+                _groups.Clear();
+                foreach (var block in _blocks)
                 {
-                    var source = _service.Mods.SourceOf(p, game, record);
-                    var item = new ListViewItem(p.Manifest.DisplayName)
+                    if (block.IsGroup)
                     {
-                        Tag = p.Id,
-                        Checked = _selection.IsEnabled(p.Id),
-                        ForeColor = p.Active ? MainForm.TitleColor : _selection.IsEnabled(p.Id) || p.State == ModState.Invalid ? ModUi.Bad : MainForm.StatusColor
-                    };
-                    item.UseItemStyleForSubItems = true;
-                    item.SubItems.Add(p.Manifest.Version);
-                    item.SubItems.Add(p.HasCode ? Texts.T("mods.codetag") : string.Empty);
-                    item.SubItems.Add(Texts.T(source == ModSource.Game ? "mods.src.game" : source == ModSource.Catalogue ? "mods.src.catalogue" : "mods.src.hand"));
-                    item.SubItems.Add(ModUi.StateWord(p, _selection));
-                    _list.Items.Add(item);
-                    if (p.Id == select)
+                        var info = _service.Mods.GroupInfo(block.GroupId, record);
+                        _groups[block.GroupId] = info;
+                        var check = GroupCheck(block.GroupId);
+                        var on = block.Items.Count(id => _selection.IsEnabled(id));
+                        var header = new ListViewItem(info.Name(Texts.Language)) { Tag = ModUi.GroupTag(block.GroupId), Checked = check == CheckState.Checked };
+                        header.SubItems.Add(string.Empty);
+                        header.SubItems.Add(Texts.T("group.mods", block.Items.Count));
+                        header.SubItems.Add(Texts.T("group.on", on, block.Items.Count));
+                        _list.SetLook((string)header.Tag, new RowLook { IsGroup = true, Open = !_closed.Contains(block.GroupId), Check = check, CheckEnabled = !_running });
+                        _list.Items.Add(header);
+                        if (_closed.Contains(block.GroupId))
+                        {
+                            continue;
+                        }
+                    }
+
+                    foreach (var id in block.Items)
+                    {
+                        var p = listed.First(x => x.Id == id);
+                        var source = _service.Mods.SourceOf(p, game, record);
+                        var item = new ListViewItem(p.Manifest.DisplayName)
+                        {
+                            Tag = p.Id,
+                            Checked = _selection.IsEnabled(p.Id)
+                        };
+                        item.SubItems.Add(p.Manifest.Version);
+                        item.SubItems.Add(Texts.T(source == ModSource.Game ? "mods.src.game" : source == ModSource.Catalogue ? "mods.src.catalogue" : "mods.src.hand"));
+                        item.SubItems.Add(ModUi.StateWord(p, _selection));
+                        var problem = !p.Active && (_selection.IsEnabled(p.Id) || p.State == ModState.Invalid);
+                        _list.SetLook(p.Id, new RowLook
+                        {
+                            Indent = block.IsGroup,
+                            Code = p.HasCode,
+                            CheckEnabled = !_running,
+                            Color = p.Active ? Theme.Bright : problem ? Theme.Bad : Theme.Dim,
+                            StateColor = problem ? Theme.Bad : p.Active ? Theme.Bright : Theme.Dim
+                        });
+                        _list.Items.Add(item);
+                    }
+                }
+
+                foreach (ListViewItem item in _list.Items)
+                {
+                    if ((string)item.Tag == select)
                     {
                         item.Selected = true;
                         item.Focused = true;
@@ -310,9 +656,31 @@ namespace FOEReLauncher
 
         private void ApplyEnabled()
         {
-            var any = _list.SelectedItems.Count > 0 && !_running;
-            _upButton.Enabled = any && _list.SelectedIndices[0] > 0;
-            _downButton.Enabled = any && _list.SelectedIndices[0] < _list.Items.Count - 1;
+            var item = _list.SelectedItems.Count > 0 ? _list.SelectedItems[0] : null;
+            var can = item != null && !_running;
+            var tag = item?.Tag as string;
+            var group = ModUi.GroupOfTag(tag);
+            var up = false;
+            var down = false;
+            if (can && tag != null)
+            {
+                var gi = _blocks.FindIndex(b => group != null ? b.GroupId == group : !b.IsGroup && b.Items.Contains(tag));
+                if (gi >= 0)
+                {
+                    up = gi > 0;
+                    down = gi < _blocks.Count - 1;
+                }
+                else
+                {
+                    var block = _blocks.FirstOrDefault(b => b.Items.Contains(tag));
+                    var i = block?.Items.IndexOf(tag) ?? -1;
+                    up = i > 0;
+                    down = block != null && i >= 0 && i < block.Items.Count - 1;
+                }
+            }
+
+            _upButton.Enabled = up;
+            _downButton.Enabled = down;
             _folderButton.Enabled = _service.IsGameInstalled();
         }
 
@@ -320,6 +688,24 @@ namespace FOEReLauncher
         {
             ApplyEnabled();
             _details.Clear();
+            var group = SelectedGroup();
+            if (group != null && _groups.TryGetValue(group, out var info))
+            {
+                var members = Members(group);
+                ModUi.Append(_details, info.Name(Texts.Language), Theme.Bright, bold: true);
+                var description = info.Description(Texts.Language);
+                if (description.Length > 0)
+                {
+                    ModUi.Append(_details, description);
+                }
+
+                ModUi.Append(_details, Texts.T("group.d.on", members.Count(id => _selection.IsEnabled(id)), members.Count), Theme.Bright);
+                ModUi.Append(_details, Texts.T("group.d.hint"), Theme.Dim);
+                _details.SelectionStart = 0;
+                _details.ScrollToCaret();
+                return;
+            }
+
             var id = SelectedId();
             var p = _packages.FirstOrDefault(x => x.Id == id && !x.Core && x.State != ModState.Duplicate);
             if (p == null)
@@ -328,10 +714,10 @@ namespace FOEReLauncher
             }
 
             var m = p.Manifest;
-            ModUi.Append(_details, m.DisplayName + "  " + m.Version, MainForm.TitleColor, bold: true);
+            ModUi.Append(_details, m.DisplayName + "  " + m.Version, Theme.Bright, bold: true);
             if (m.Author.Length > 0)
             {
-                ModUi.Append(_details, Texts.T("mods.d.by", m.Author), MainForm.StatusColor);
+                ModUi.Append(_details, Texts.T("mods.d.by", m.Author), Theme.Dim);
             }
 
             if (m.Description.Length > 0)
@@ -339,7 +725,7 @@ namespace FOEReLauncher
                 ModUi.Append(_details, m.Description);
             }
 
-            ModUi.Append(_details, Texts.T("mods.d.state", ModUi.StateWord(p, _selection)), p.Active ? ModUi.Good : MainForm.BodyColor);
+            ModUi.Append(_details, Texts.T("mods.d.state", ModUi.StateWord(p, _selection)), p.Active ? Theme.Bright : Theme.Body);
             if (!p.Active && p.State != ModState.Disabled)
             {
                 ModUi.Append(_details, ModRules.ReasonText(p, Texts.Language), ModUi.Bad);
@@ -372,13 +758,13 @@ namespace FOEReLauncher
             if (p.HasCode)
             {
                 ModUi.Append(_details, Texts.T("mods.d.code", string.Join(", ", m.Assemblies)) +
-                                       Texts.T(_selection.HasConsent(p.Id, m.Version) ? "mods.d.allowed" : "mods.d.notallowed"));
+                                       Texts.T(_selection.HasConsent(p.Id, m.Version) ? "mods.d.allowed" : "mods.d.notallowed"), Theme.Amber);
             }
 
-            ModUi.Append(_details, Texts.T("mods.d.folder", p.RelDir), MainForm.StatusColor);
+            ModUi.Append(_details, Texts.T("mods.d.folder", p.RelDir), Theme.Dim);
             if (p.Issues.Count > 0)
             {
-                ModUi.Append(_details, Texts.T("mods.d.issues", string.Join("; ", p.Issues)), MainForm.StatusColor);
+                ModUi.Append(_details, Texts.T("mods.d.issues", string.Join("; ", p.Issues)), Theme.Dim);
             }
 
             _details.SelectionStart = 0;
@@ -392,11 +778,33 @@ namespace FOEReLauncher
                 return;
             }
 
+            var tag = _list.Items[e.Index].Tag as string;
+            var group = ModUi.GroupOfTag(tag);
+            var on = e.NewValue == CheckState.Checked;
+            if (group != null)
+            {
+                // The group's box: on when not all of its mods are on, off when they all are.
+                e.NewValue = e.CurrentValue;
+                var wanted = GroupCheck(group) != CheckState.Checked;
+                if ((on && GroupCheck(group) == CheckState.Checked) || (!on && GroupCheck(group) == CheckState.Unchecked && e.CurrentValue == CheckState.Unchecked))
+                {
+                    // The list re-applies its ticks when its window handle is created: not a change.
+                    return;
+                }
+
+                if (_running)
+                {
+                    SetStatus(() => Texts.T("mods.readonly"));
+                    return;
+                }
+
+                BeginInvoke(new Action(() => ToggleGroup(group, wanted)));
+                return;
+            }
+
             // The list re-applies its ticks when its window handle is created: a tick that already matches the saved
             // list is not a change.
-            var on = e.NewValue == CheckState.Checked;
-            var tagged = _list.Items[e.Index].Tag as string;
-            if (tagged == null || on == _selection.IsEnabled(tagged))
+            if (tag == null || on == _selection.IsEnabled(tag))
             {
                 return;
             }
@@ -409,11 +817,7 @@ namespace FOEReLauncher
                 return;
             }
 
-            var id = _list.Items[e.Index].Tag as string;
-            if (id != null)
-            {
-                BeginInvoke(new Action(() => Toggle(id, on)));
-            }
+            BeginInvoke(new Action(() => Toggle(tag, on)));
         }
 
         private ModPackage? Package(string id) => _packages.FirstOrDefault(x => x.Id == id && !x.Core && x.State != ModState.Duplicate);
@@ -486,16 +890,65 @@ namespace FOEReLauncher
             }
         }
 
+        /// <summary>Switches every mod of a group on or off with the same rules as single switches: one confirm for the
+        /// mods outside the group that change too, one for program code; mods that conflict are left off and named.</summary>
+        internal void ToggleGroup(string group, bool on)
+        {
+            if (_running || !_groups.TryGetValue(group, out var info))
+            {
+                return;
+            }
+
+            var members = Members(group);
+            var plan = ModGroups.PlanToggle(members, on, _packages, _selection);
+            var groupName = info.Name(Texts.Language);
+            if (plan.Outside.Count > 0 &&
+                !ConfirmForm.Ask(FindForm(), Texts.T("mods.confirm.title"), Texts.T(on ? "group.confirm.on" : "group.confirm.off", groupName, string.Join(", ", plan.Outside.Select(NameOf))), Texts.T("btn.ok")))
+            {
+                return;
+            }
+
+            var consent = plan.NeedConsent.Select(Package).Where(x => x != null).Cast<ModPackage>().ToList();
+            if (consent.Count > 0 &&
+                !ConfirmForm.Ask(FindForm(), Texts.T("mods.c.title"), Texts.T("group.c.text", string.Join(", ", consent.Select(x => x.Manifest.DisplayName))), Texts.T("mods.c.allow"), warning: true))
+            {
+                return;
+            }
+
+            var skipped = plan.Skipped.Select(kv => kv.Value.Length > 0 ? Texts.T("group.skip.conflict", NameOf(kv.Key), NameOf(kv.Value)) : Texts.T("group.skip.broken", NameOf(kv.Key))).ToList();
+            if (plan.Members.Count == 0 && plan.Outside.Count == 0)
+            {
+                SetStatus(() => skipped.Count > 0 ? string.Join(" ", skipped) : Texts.T("mods.saved"));
+                return;
+            }
+
+            if (Save(ModGroups.Apply(_selection, plan, consent)))
+            {
+                var count = plan.Members.Count;
+                var also = plan.Outside.Count == 0 ? string.Empty : " " + Texts.T(on ? "group.alsoon" : "group.alsooff", string.Join(", ", plan.Outside.Select(NameOf)));
+                var left = skipped.Count == 0 ? string.Empty : " " + string.Join(" ", skipped);
+                Reload();
+                SetStatus(() => Texts.T(on ? "group.saved.on" : "group.saved.off", groupName, count) + also + left);
+            }
+        }
+
         private void MoveSelected(int delta)
         {
-            var id = SelectedId();
-            if (id == null || _running)
+            var tag = SelectedTag();
+            if (tag == null || _running)
             {
                 return;
             }
 
             var sel = _selection.Clone();
-            sel.Move(id, delta, Listed().Select(p => p.Id));
+            var group = ModUi.GroupOfTag(tag);
+            sel.Order = ModGroups.Move(_blocks, group, group == null ? tag : null, delta);
+            foreach (var id in _selection.Order.Where(x => !sel.Order.Contains(x)))
+            {
+                // Ids of mods that are not in the folder now keep their place at the end.
+                sel.Order.Add(id);
+            }
+
             if (Save(sel))
             {
                 Reload();
@@ -548,7 +1001,7 @@ namespace FOEReLauncher
                 return;
             }
 
-            _status.ForeColor = MainForm.StatusColor;
+            _status.ForeColor = Theme.Dim;
             var text = _statusText();
             if (text.Length == 0)
             {
@@ -559,17 +1012,22 @@ namespace FOEReLauncher
         }
     }
 
-    /// <summary>The Catalogue tab: mods from downloads/mods/catalog.json; install, update and remove.</summary>
-    public sealed class CataloguePage : Panel
+    /// <summary>The Catalogue tab: mods from downloads/mods/catalog.json under their groups; install, update, remove,
+    /// and a whole group installed and switched on one mod after another.</summary>
+    public sealed class CataloguePage : ThemedPanel
     {
         private readonly LauncherService _service;
         private readonly Label _searchLabel;
         private readonly TextBox _search;
+        private readonly FrameBox _searchBox;
         private readonly Label _count;
-        private readonly ListView _list;
+        private readonly Label _examples;
+        private readonly PipList _list;
+        private readonly FrameBox _listBox;
         private readonly RichTextBox _details;
-        private readonly Button _installButton;
-        private readonly Button _removeButton;
+        private readonly FrameBox _detailsBox;
+        private readonly PipButton _installButton;
+        private readonly PipButton _removeButton;
         private readonly Button _updateAllButton;
         private readonly Button _refreshButton;
         private readonly ProgressStripe _progress;
@@ -581,50 +1039,58 @@ namespace FOEReLauncher
         private bool _busy;
         private bool _running;
         private string? _loadError;
+        private CancellationTokenSource? _cancel;
         private List<ModPackage> _packages = new List<ModPackage>();
         private ModSelection _selection = new ModSelection();
+        private readonly HashSet<string> _closed = new HashSet<string>(StringComparer.Ordinal);
         private Func<string> _statusText = () => string.Empty;
 
         public CataloguePage(LauncherService service)
         {
             _service = service;
-            BackColor = MainForm.Background;
             _searchLabel = ModUi.MakeLine();
             _searchLabel.TextAlign = ContentAlignment.MiddleLeft;
             _search = new TextBox
             {
-                BorderStyle = BorderStyle.FixedSingle,
+                BorderStyle = BorderStyle.None,
                 BackColor = ModUi.Panel,
-                ForeColor = MainForm.TitleColor,
-                Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point)
+                ForeColor = Theme.Bright,
+                Font = Theme.Font(10f)
             };
-            _search.TextChanged += (s, e) => Fill(SelectedId());
+            _search.TextChanged += (s, e) => Fill(SelectedTag());
+            _searchBox = new FrameBox(_search, 5);
             _count = ModUi.MakeLine();
             _count.TextAlign = ContentAlignment.MiddleRight;
-            _list = ModUi.MakeList(checkBoxes: false);
+            _examples = ModUi.MakeLine(9f);
+            _list = new PipList(checkBoxes: false);
             _list.Columns.Add(string.Empty, 150);
-            _list.Columns.Add(string.Empty, 58);
-            _list.Columns.Add(string.Empty, 54);
+            _list.Columns.Add(string.Empty, 60);
             _list.Columns.Add(string.Empty, 70);
-            _list.Columns.Add(string.Empty, 120);
+            _list.Columns.Add(string.Empty, 150);
             _list.SelectedIndexChanged += (s, e) => ShowDetails();
+            _list.GroupToggle += ToggleOpen;
+            _list.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter && !e.Handled && _installButton?.Enabled == true)
+                {
+                    _installButton!.PerformClick();
+                    e.Handled = true;
+                }
+            };
+            _listBox = new FrameBox(_list, 1);
             _details = ModUi.MakeDetails();
-            _installButton = ModUi.MakeButton();
-            _installButton.BackColor = MainForm.Accent;
-            _installButton.ForeColor = Color.White;
-            _installButton.FlatAppearance.MouseOverBackColor = ControlPaint.Light(MainForm.Accent, 0.12f);
-            // The accent colour says "press me": a disabled button (already installed, game running) takes the plain one.
-            _installButton.EnabledChanged += (s, e) => _installButton.BackColor = _installButton.Enabled ? MainForm.Accent : MainForm.Secondary;
-            _installButton.Click += async (s, e) => await InstallSelectedAsync();
-            _removeButton = ModUi.MakeButton();
+            _detailsBox = new FrameBox(_details, 8);
+            _installButton = ModUi.MakeButton(PipButtonKind.Primary);
+            _installButton.Click += async (s, e) => await OnInstallClickAsync();
+            _removeButton = ModUi.MakeButton(PipButtonKind.Danger);
             _removeButton.Click += (s, e) => RemoveSelected();
             _updateAllButton = ModUi.MakeButton();
             _updateAllButton.Click += async (s, e) => await UpdateAllAsync();
             _refreshButton = ModUi.MakeButton();
             _refreshButton.Click += async (s, e) => await RefreshAsync();
-            _progress = new ProgressStripe { Visible = false, TrackColor = MainForm.ProgressTrack, FillColor = MainForm.Accent };
+            _progress = new ProgressStripe { Visible = false };
             _status = ModUi.MakeLine();
-            Controls.AddRange(new Control[] { _searchLabel, _search, _count, _list, _details, _installButton, _removeButton, _updateAllButton, _refreshButton, _progress, _status });
+            Controls.AddRange(new Control[] { _searchLabel, _searchBox, _count, _examples, _listBox, _detailsBox, _installButton, _removeButton, _updateAllButton, _refreshButton, _progress, _status });
             Resize += (s, e) => LayoutPage();
         }
 
@@ -634,15 +1100,15 @@ namespace FOEReLauncher
         public void ApplyTexts()
         {
             _searchLabel.Text = Texts.T("cat.search");
+            _examples.Text = Texts.T("mods.examples", ModService.ExamplesArchive);
             _list.Columns[0].Text = Texts.T("mods.col.name");
             _list.Columns[1].Text = Texts.T("mods.col.version");
-            _list.Columns[2].Text = Texts.T("cat.col.kind");
-            _list.Columns[3].Text = Texts.T("cat.col.size");
-            _list.Columns[4].Text = Texts.T("mods.col.state");
-            _removeButton.Text = Texts.T("cat.btn.remove");
+            _list.Columns[2].Text = Texts.T("cat.col.size");
+            _list.Columns[3].Text = Texts.T("mods.col.state");
             _refreshButton.Text = Texts.T("cat.btn.refresh");
-            Fill(SelectedId());
+            Fill(SelectedTag());
             ShowStatus();
+            LayoutPage();
         }
 
         public void LayoutPage()
@@ -654,30 +1120,41 @@ namespace FOEReLauncher
                 return;
             }
 
-            var labelWidth = TextRenderer.MeasureText(_searchLabel.Text, _searchLabel.Font).Width + 4;
-            _searchLabel.Bounds = new Rectangle(0, 6, labelWidth, _search.PreferredHeight);
-            _count.Bounds = new Rectangle(width - 150, 6, 150, _search.PreferredHeight);
-            _search.Bounds = new Rectangle(labelWidth + 4, 6, _count.Left - 12 - labelWidth, _search.PreferredHeight);
+            var searchHeight = _search.PreferredHeight + (2 * Theme.S(_searchBox.Inner));
+            var labelWidth = TextRenderer.MeasureText(_searchLabel.Text, _searchLabel.Font).Width + Theme.S(4);
+            var countWidth = Math.Max(Theme.S(150), TextRenderer.MeasureText(_count.Text, _count.Font).Width + Theme.S(8));
+            _searchLabel.Bounds = new Rectangle(0, 0, labelWidth, searchHeight);
+            _count.Bounds = new Rectangle(width - countWidth, 0, countWidth, searchHeight);
+            _searchBox.Bounds = new Rectangle(labelWidth + Theme.S(4), 0, Math.Max(Theme.S(80), _count.Left - Theme.S(12) - labelWidth), searchHeight);
+            _searchBox.LayoutChild();
 
             var statusHeight = (_status.Font.Height * 2) + 2;
             _status.Bounds = new Rectangle(0, height - statusHeight, width, statusHeight);
-            var bottom = _status.Top - 4;
+            var bottom = _status.Top - Theme.S(4);
             if (_progressShown)
             {
-                _progress.Bounds = new Rectangle(0, bottom - 8, width, 8);
-                bottom = _progress.Top - 6;
+                _progress.Bounds = new Rectangle(0, bottom - Theme.S(12), width, Theme.S(12));
+                bottom = _progress.Top - Theme.S(6);
             }
 
             var row2 = bottom - ModUi.ButtonHeight;
             ModUi.Row(row2, width, _updateAllButton, _refreshButton);
             var row1 = row2 - ModUi.Gap - ModUi.ButtonHeight;
             ModUi.Row(row1, width, _installButton, _removeButton);
-            var detailsHeight = 120;
-            _details.Bounds = new Rectangle(0, row1 - 8 - detailsHeight, width, detailsHeight);
-            var top = _search.Bottom + 8;
-            _list.Bounds = new Rectangle(0, top, width, _details.Top - 8 - top);
-            var fixedWidth = 58 + 54 + 70 + 120 + SystemInformation.VerticalScrollBarWidth + 4;
-            _list.Columns[0].Width = Math.Max(110, width - fixedWidth);
+            var detailsHeight = Math.Max(Theme.S(64), Math.Min(Theme.S(130), (row1 - _searchBox.Bottom) / 3));
+            _detailsBox.Bounds = new Rectangle(0, row1 - Theme.S(8) - detailsHeight, width, detailsHeight);
+            _detailsBox.LayoutChild();
+            var examples = _service.IsGameInstalled() && _service.Mods.HasExamplesArchive;
+            _examples.Visible = examples;
+            _examples.Bounds = new Rectangle(0, _searchBox.Bottom + Theme.S(4), width, examples ? TextRenderer.MeasureText(_examples.Text, _examples.Font, new Size(width, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height + 2 : 0);
+            var top = (examples ? _examples.Bottom : _searchBox.Bottom) + Theme.S(6);
+            _listBox.Bounds = new Rectangle(0, top, width, Math.Max(Theme.S(60), _detailsBox.Top - Theme.S(8) - top));
+            _listBox.LayoutChild();
+            _list.Columns[1].Width = ModUi.ColumnWidth(_list, 64, _list.Columns[1].Text, "10.10.10");
+            _list.Columns[2].Width = ModUi.ColumnWidth(_list, 70, _list.Columns[2].Text, "999 KB", Texts.T("group.mods", 99));
+            _list.Columns[3].Width = ModUi.ColumnWidth(_list, 150, _list.Columns[3].Text, Texts.T("cat.st.installed.on"), Texts.T("cat.st.notinstalled"), Texts.T("group.installed", 10, 10));
+            var fixedWidth = _list.Columns[1].Width + _list.Columns[2].Width + _list.Columns[3].Width + SystemInformation.VerticalScrollBarWidth + Theme.S(2);
+            _list.Columns[0].Width = Math.Max(Theme.S(140), _list.Width - fixedWidth);
         }
 
         public void SetGameRunning(bool running)
@@ -689,7 +1166,7 @@ namespace FOEReLauncher
 
             _running = running;
             ScanLocal();
-            Fill(SelectedId());
+            Fill(SelectedTag());
             ShowStatus();
         }
 
@@ -706,7 +1183,7 @@ namespace FOEReLauncher
         public void LocalChanged()
         {
             ScanLocal();
-            Fill(SelectedId());
+            Fill(SelectedTag());
         }
 
         public async Task RefreshAsync()
@@ -722,6 +1199,11 @@ namespace FOEReLauncher
             {
                 _catalog = await _service.FetchCatalogAsync();
                 _loadError = null;
+                if (_service.IsGameInstalled() && _service.Mods.AdoptGroups(_catalog))
+                {
+                    // Mods installed before the catalogue had groups now list under theirs.
+                    Changed?.Invoke(this, EventArgs.Empty);
+                }
             }
             catch (FileNotFoundException)
             {
@@ -740,7 +1222,7 @@ namespace FOEReLauncher
             }
 
             ScanLocal();
-            Fill(SelectedId());
+            Fill(SelectedTag());
             SetStatus(null);
         }
 
@@ -749,18 +1231,25 @@ namespace FOEReLauncher
             _packages = _service.IsGameInstalled() ? _service.Mods.Scan(out _selection) : new List<ModPackage>();
         }
 
-        private string? SelectedId() => _list.SelectedItems.Count > 0 ? _list.SelectedItems[0].Tag as string : null;
+        private string? SelectedTag() => _list.SelectedItems.Count > 0 ? _list.SelectedItems[0].Tag as string : null;
+
+        private string? SelectedId() => SelectedTag() is string t && ModUi.GroupOfTag(t) == null ? t : null;
+
+        private string? SelectedGroup() => ModUi.GroupOfTag(SelectedTag());
 
         private CatalogEntry? Selected() => _catalog?.Find(SelectedId() ?? string.Empty);
 
         private CatalogState StateOf(CatalogEntry e) => _service.Mods.StateOf(e, _packages);
+
+        private List<CatalogEntry> GroupEntries(string group) =>
+            (_catalog?.Entries ?? new List<CatalogEntry>()).Where(e => e.Group == group).ToList();
 
         private string StateText(CatalogEntry e, CatalogState state)
         {
             switch (state)
             {
                 case CatalogState.Installed:
-                    return Texts.T("cat.st.installed");
+                    return _selection.IsEnabled(e.Id) ? Texts.T("cat.st.installed.on") : Texts.T("cat.st.installed");
                 case CatalogState.UpdateAvailable:
                     return Texts.T("cat.st.update", e.Version);
                 case CatalogState.WithGame:
@@ -782,8 +1271,32 @@ namespace FOEReLauncher
                 return true;
             }
 
-            return new[] { e.Id, e.NameRu, e.NameEn, e.DescriptionRu, e.DescriptionEn, e.Author }
+            var group = _catalog?.FindGroup(e.Group);
+            return new[] { e.Id, e.NameRu, e.NameEn, e.DescriptionRu, e.DescriptionEn, e.Author, group?.NameRu ?? string.Empty, group?.NameEn ?? string.Empty }
                 .Any(t => t.IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0);
+        }
+
+        private void ToggleOpen(string group)
+        {
+            if (!_closed.Remove(group))
+            {
+                _closed.Add(group);
+            }
+
+            Fill(ModUi.GroupTag(group));
+        }
+
+        /// <summary>Entries in list order: groups by their order, then the mods on their own, each by name.</summary>
+        private List<ModBlock<CatalogEntry>> Blocks()
+        {
+            var entries = (_catalog?.Entries ?? new List<CatalogEntry>()).Where(Matches).ToList();
+            var groups = _catalog?.Groups ?? new List<ModGroupInfo>();
+            var ordered = entries
+                .OrderBy(e => e.Group.Length == 0 ? 1 : 0)
+                .ThenBy(e => groups.FirstOrDefault(g => g.Id == e.Group)?.Order ?? 0)
+                .ThenBy(e => groups.FirstOrDefault(g => g.Id == e.Group)?.Name(Texts.Language) ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(e => e.Name(Texts.Language), StringComparer.CurrentCultureIgnoreCase);
+            return ModGroups.Arrange(ordered, e => e.Group);
         }
 
         private void Fill(string? select)
@@ -792,27 +1305,53 @@ namespace FOEReLauncher
             try
             {
                 _list.Items.Clear();
-                foreach (var e in _catalog?.Entries ?? new List<CatalogEntry>())
+                _list.ClearLooks();
+                var searching = _search.Text.Trim().Length > 0;
+                foreach (var block in Blocks())
                 {
-                    if (!Matches(e))
+                    if (block.IsGroup)
                     {
-                        continue;
+                        var info = _catalog?.FindGroup(block.GroupId) ?? ModGroupInfo.FromFolder(block.GroupId);
+                        var all = GroupEntries(block.GroupId);
+                        var installed = all.Count(e => StateOf(e) == CatalogState.Installed || StateOf(e) == CatalogState.UpdateAvailable);
+                        var updates = all.Count(e => StateOf(e) == CatalogState.UpdateAvailable);
+                        var open = searching || !_closed.Contains(block.GroupId);
+                        var header = new ListViewItem(info.Name(Texts.Language)) { Tag = ModUi.GroupTag(block.GroupId) };
+                        header.SubItems.Add(string.Empty);
+                        header.SubItems.Add(Texts.T("group.mods", all.Count));
+                        header.SubItems.Add(updates > 0 ? Texts.T("group.updates", updates) : Texts.T("group.installed", installed, all.Count));
+                        _list.SetLook((string)header.Tag, new RowLook { IsGroup = true, Open = open, StateColor = updates > 0 ? Theme.Amber : installed == all.Count ? Theme.Bright : Theme.Dim });
+                        _list.Items.Add(header);
+                        if (!open)
+                        {
+                            continue;
+                        }
                     }
 
-                    var state = StateOf(e);
-                    var item = new ListViewItem(e.Name(Texts.Language))
+                    foreach (var e in block.Items)
                     {
-                        Tag = e.Id,
-                        ForeColor = state == CatalogState.UpdateAvailable ? MainForm.Accent : state == CatalogState.NotInstalled ? MainForm.TitleColor : MainForm.StatusColor
-                    };
-                    item.SubItems.Add(e.Version);
-                    item.SubItems.Add(Texts.T(e.IsCode ? "cat.kind.code" : "cat.kind.data"));
-                    item.SubItems.Add(LauncherService.FormatSize(e.Size, Texts.Language));
-                    item.SubItems.Add(StateText(e, state));
-                    _list.Items.Add(item);
-                    if (e.Id == select)
+                        var state = StateOf(e);
+                        var item = new ListViewItem(e.Name(Texts.Language)) { Tag = e.Id };
+                        item.SubItems.Add(e.Version);
+                        item.SubItems.Add(LauncherService.FormatSize(e.Size, Texts.Language));
+                        item.SubItems.Add(StateText(e, state));
+                        _list.SetLook(e.Id, new RowLook
+                        {
+                            Indent = block.IsGroup,
+                            Code = e.IsCode,
+                            Color = state == CatalogState.NotInstalled ? Theme.Bright : Theme.Body,
+                            StateColor = state == CatalogState.UpdateAvailable ? Theme.Amber : state == CatalogState.NotInstalled ? Theme.Dim : state == CatalogState.NeedsGame ? Theme.Bad : Theme.Bright
+                        });
+                        _list.Items.Add(item);
+                    }
+                }
+
+                foreach (ListViewItem item in _list.Items)
+                {
+                    if ((string)item.Tag == select)
                     {
                         item.Selected = true;
+                        item.Focused = true;
                     }
                 }
 
@@ -829,34 +1368,61 @@ namespace FOEReLauncher
             }
 
             _count.Text = _catalog == null ? string.Empty : Texts.T("cat.count", _catalog.Entries.Count);
+            LayoutPage();
             ShowDetails();
         }
 
         private void ShowDetails()
         {
             _details.Clear();
+            ApplyButtons();
+            var group = SelectedGroup();
+            if (group != null)
+            {
+                var info = _catalog?.FindGroup(group) ?? ModGroupInfo.FromFolder(group);
+                var all = GroupEntries(group);
+                ModUi.Append(_details, info.Name(Texts.Language), Theme.Bright, bold: true);
+                var description = info.Description(Texts.Language);
+                if (description.Length > 0)
+                {
+                    ModUi.Append(_details, description);
+                }
+
+                var installed = all.Count(e => StateOf(e) == CatalogState.Installed || StateOf(e) == CatalogState.UpdateAvailable);
+                ModUi.Append(_details, Texts.T("group.d.installed", installed, all.Count, all.Count(e => _selection.IsEnabled(e.Id) && _packages.Any(p => p.Id == e.Id))), Theme.Bright);
+                var code = all.Where(e => e.IsCode).Select(e => e.Name(Texts.Language)).ToList();
+                if (code.Count > 0)
+                {
+                    ModUi.Append(_details, Texts.T("group.d.code", string.Join(", ", code)), Theme.Amber);
+                }
+
+                ModUi.Append(_details, Texts.T("group.d.list", string.Join(", ", all.Select(e => e.Name(Texts.Language)))), Theme.Dim);
+                _details.SelectionStart = 0;
+                _details.ScrollToCaret();
+                return;
+            }
+
             var e = Selected();
-            ApplyButtons(e);
             if (e == null)
             {
                 return;
             }
 
-            ModUi.Append(_details, e.Name(Texts.Language) + "  " + e.Version, MainForm.TitleColor, bold: true);
+            ModUi.Append(_details, e.Name(Texts.Language) + "  " + e.Version, Theme.Bright, bold: true);
             if (e.Author.Length > 0)
             {
-                ModUi.Append(_details, Texts.T("cat.d.by", e.Author), MainForm.StatusColor);
+                ModUi.Append(_details, Texts.T("cat.d.by", e.Author), Theme.Dim);
             }
 
-            var description = e.Description(Texts.Language);
-            if (description.Length > 0)
+            var text = e.Description(Texts.Language);
+            if (text.Length > 0)
             {
-                ModUi.Append(_details, description);
+                ModUi.Append(_details, text);
             }
 
             if (e.IsCode)
             {
-                ModUi.Append(_details, Texts.T("mods.d.code", Texts.T("cat.kind.code")), ModUi.Bad);
+                ModUi.Append(_details, Texts.T("mods.d.code", Texts.T("cat.kind.code")), Theme.Amber);
             }
 
             if (e.Requires.Count > 0)
@@ -872,25 +1438,66 @@ namespace FOEReLauncher
             var mine = _service.Mods.LoadRecord().Find(e.Id);
             if (mine != null)
             {
-                ModUi.Append(_details, Texts.T("cat.d.installed", mine.Version), MainForm.StatusColor);
+                ModUi.Append(_details, Texts.T("cat.d.installed", mine.Version), Theme.Dim);
             }
 
             if (e.Homepage.Length > 0)
             {
-                ModUi.Append(_details, Texts.T("cat.d.homepage", e.Homepage), MainForm.StatusColor);
+                ModUi.Append(_details, Texts.T("cat.d.homepage", e.Homepage), Theme.Dim);
             }
 
             _details.SelectionStart = 0;
             _details.ScrollToCaret();
         }
 
-        private void ApplyButtons(CatalogEntry? e)
+        /// <summary>What the main button does for the selected group: install (and switch on) the missing ones, update,
+        /// switch on the installed ones that are off, or nothing.</summary>
+        private void GroupCounts(string group, out int toInstall, out int toUpdate, out int toEnable, out int removable)
+        {
+            var all = GroupEntries(group);
+            toInstall = all.Count(e => StateOf(e) == CatalogState.NotInstalled);
+            toUpdate = all.Count(e => StateOf(e) == CatalogState.UpdateAvailable);
+            toEnable = all.Count(e => StateOf(e) != CatalogState.NotInstalled && StateOf(e) != CatalogState.NeedsGame && _packages.Any(p => p.Id == e.Id) && !_selection.IsEnabled(e.Id));
+            removable = all.Count(e => StateOf(e) == CatalogState.Installed || StateOf(e) == CatalogState.UpdateAvailable);
+        }
+
+        private void ApplyButtons()
         {
             var can = !_busy && !_running && _service.IsGameInstalled();
-            var state = e == null ? CatalogState.NotInstalled : StateOf(e);
-            _installButton.Text = Texts.T(state == CatalogState.UpdateAvailable ? "cat.btn.update" : state == CatalogState.AddedByHand ? "cat.btn.replace" : "cat.btn.install");
-            _installButton.Enabled = can && e != null && (state == CatalogState.NotInstalled || state == CatalogState.UpdateAvailable || state == CatalogState.AddedByHand);
-            _removeButton.Enabled = can && e != null && (state == CatalogState.Installed || state == CatalogState.UpdateAvailable);
+            if (_cancel != null)
+            {
+                // A run is going: the main button stops it, everything else waits.
+                _installButton.Text = Texts.T("cat.btn.stop");
+                _installButton.Enabled = !_cancel.IsCancellationRequested;
+                _removeButton.Enabled = false;
+                _updateAllButton.Enabled = false;
+                _refreshButton.Enabled = false;
+                return;
+            }
+
+            var group = SelectedGroup();
+            if (group != null)
+            {
+                GroupCounts(group, out var toInstall, out var toUpdate, out var toEnable, out var removable);
+                _installButton.Text = toInstall > 0 ? Texts.T("cat.btn.group.install", toInstall)
+                    : toUpdate > 0 ? Texts.T("cat.btn.group.update", toUpdate)
+                    : toEnable > 0 ? Texts.T("cat.btn.group.enable", toEnable)
+                    : Texts.T("cat.btn.group.done");
+                _installButton.Enabled = can && (toInstall > 0 || toUpdate > 0 || toEnable > 0);
+                _removeButton.Text = Texts.T("cat.btn.group.remove", removable);
+                _removeButton.Enabled = can && removable > 0;
+            }
+            else
+            {
+                var e = Selected();
+                var state = e == null ? CatalogState.NotInstalled : StateOf(e);
+                var off = e != null && (state == CatalogState.Installed) && !_selection.IsEnabled(e.Id);
+                _installButton.Text = Texts.T(state == CatalogState.UpdateAvailable ? "cat.btn.update" : state == CatalogState.AddedByHand ? "cat.btn.replace" : off ? "cat.btn.enable" : state == CatalogState.Installed ? "cat.btn.installed" : "cat.btn.install");
+                _installButton.Enabled = can && e != null && (state == CatalogState.NotInstalled || state == CatalogState.UpdateAvailable || state == CatalogState.AddedByHand || off);
+                _removeButton.Text = Texts.T("cat.btn.remove");
+                _removeButton.Enabled = can && e != null && (state == CatalogState.Installed || state == CatalogState.UpdateAvailable);
+            }
+
             var updates = (_catalog?.Entries ?? new List<CatalogEntry>()).Count(x => StateOf(x) == CatalogState.UpdateAvailable);
             _updateAllButton.Text = Texts.T("cat.btn.updateall", updates);
             _updateAllButton.Enabled = can && updates > 0;
@@ -901,20 +1508,69 @@ namespace FOEReLauncher
         private void SetBusy(bool busy)
         {
             _busy = busy;
-            ApplyButtons(Selected());
+            ApplyButtons();
         }
 
         private Form? Owner => FindForm();
 
-        private async Task InstallSelectedAsync()
+        private async Task OnInstallClickAsync()
         {
-            var e = Selected();
-            if (e == null || _busy)
+            if (_cancel != null)
+            {
+                _cancel.Cancel();
+                SetStatus(() => Texts.T("cat.st.stopping"));
+                ApplyButtons();
+                return;
+            }
+
+            if (_busy || _catalog == null)
             {
                 return;
             }
 
-            await InstallAsync(new[] { e });
+            var group = SelectedGroup();
+            if (group != null)
+            {
+                await InstallGroupAsync(group);
+                return;
+            }
+
+            var e = Selected();
+            if (e == null)
+            {
+                return;
+            }
+
+            if (StateOf(e) == CatalogState.Installed)
+            {
+                // Installed and off: the button only switches it on.
+                EnableAfter(new[] { e.Id }, new List<string>(), e.Name(Texts.Language), out var enabledText);
+                ScanLocal();
+                Fill(e.Id);
+                Changed?.Invoke(this, EventArgs.Empty);
+                SetStatus(() => enabledText);
+                return;
+            }
+
+            await InstallAsync(new[] { e }, enable: StateOf(e) != CatalogState.UpdateAvailable, groupName: null);
+        }
+
+        private async Task InstallGroupAsync(string group)
+        {
+            var info = _catalog?.FindGroup(group) ?? ModGroupInfo.FromFolder(group);
+            var all = GroupEntries(group);
+            var targets = all.Where(e => StateOf(e) == CatalogState.NotInstalled || StateOf(e) == CatalogState.UpdateAvailable).ToList();
+            if (targets.Count == 0)
+            {
+                EnableAfter(all.Select(e => e.Id).ToList(), new List<string>(), info.Name(Texts.Language), out var text);
+                ScanLocal();
+                Fill(ModUi.GroupTag(group));
+                Changed?.Invoke(this, EventArgs.Empty);
+                SetStatus(() => text);
+                return;
+            }
+
+            await InstallAsync(targets, enable: true, groupName: info.Name(Texts.Language), groupMembers: all.Select(e => e.Id).ToList());
         }
 
         private async Task UpdateAllAsync()
@@ -924,12 +1580,17 @@ namespace FOEReLauncher
                 return;
             }
 
-            await InstallAsync(_catalog.Entries.Where(x => StateOf(x) == CatalogState.UpdateAvailable).ToList());
+            await InstallAsync(_catalog.Entries.Where(x => StateOf(x) == CatalogState.UpdateAvailable).ToList(), enable: false, groupName: null);
         }
 
-        /// <summary>Installs or updates the entries with the catalogue mods they require. One confirm lists the
-        /// requirements, a code mod is warned about, a folder added by hand is moved to the backups first.</summary>
-        private async Task InstallAsync(IList<CatalogEntry> targets)
+        /// <summary>
+        /// Installs or updates the entries with the catalogue mods they require, strictly one after another with a
+        /// "3 of 11" progress and Stop; a mod that fails is reported and the rest go on. One confirm lists the
+        /// requirements of a single mod, one names every code mod, a folder added by hand is moved to the backups
+        /// first. With <paramref name="enable"/> the installed mods (or the whole group) are switched on afterwards
+        /// with the game's rules.
+        /// </summary>
+        private async Task InstallAsync(IList<CatalogEntry> targets, bool enable, string? groupName, IList<string>? groupMembers = null)
         {
             if (_catalog == null || targets.Count == 0)
             {
@@ -943,9 +1604,10 @@ namespace FOEReLauncher
             }
 
             var plan = new List<CatalogEntry>();
-            try
+            var refused = new List<string>();
+            foreach (var t in targets)
             {
-                foreach (var t in targets)
+                try
                 {
                     foreach (var x in _service.Mods.PlanInstall(t, _catalog, _packages))
                     {
@@ -955,10 +1617,21 @@ namespace FOEReLauncher
                         }
                     }
                 }
+                catch (ModOperationException ex)
+                {
+                    if (targets.Count == 1)
+                    {
+                        SetStatus(() => Texts.T("cat.st.failed", ex.Text));
+                        return;
+                    }
+
+                    refused.Add(Texts.T("cat.st.failed.one", t.Name(Texts.Language), ex.Text));
+                }
             }
-            catch (ModOperationException ex)
+
+            if (plan.Count == 0)
             {
-                SetStatus(() => Texts.T("cat.st.failed", ex.Text));
+                SetStatus(() => string.Join(" ", refused));
                 return;
             }
 
@@ -969,15 +1642,29 @@ namespace FOEReLauncher
                 return;
             }
 
-            foreach (var x in plan.Where(x => x.IsCode && StateOf(x) == CatalogState.NotInstalled))
+            // Program code: one question for the whole run; it also allows the code of the versions being installed.
+            var codeNew = plan.Where(x => x.IsCode && StateOf(x) == CatalogState.NotInstalled).ToList();
+            var allowed = new List<string>();
+            if (codeNew.Count == 1 && targets.Count == 1)
             {
+                var x = codeNew[0];
                 if (!ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("cat.confirm.code", x.Name(Texts.Language), x.Author.Length > 0 ? x.Author : "?"), Texts.T("cat.btn.install"), warning: true))
                 {
                     return;
                 }
+
+                allowed.Add(x.Id);
+            }
+            else if (codeNew.Count > 0)
+            {
+                if (!ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("cat.confirm.code.many", string.Join(", ", codeNew.Select(x => x.Name(Texts.Language)))), Texts.T("cat.btn.install"), warning: true))
+                {
+                    return;
+                }
+
+                allowed.AddRange(codeNew.Select(x => x.Id));
             }
 
-            var backups = new List<string>();
             foreach (var x in plan.Where(x => StateOf(x) == CatalogState.AddedByHand))
             {
                 if (!ConfirmForm.Ask(Owner, Texts.T("mods.confirm.title"), Texts.T("cat.confirm.replace", x.Id, _service.Mods.BackupDir), Texts.T("btn.ok")))
@@ -987,13 +1674,14 @@ namespace FOEReLauncher
             }
 
             var updating = plan.Where(x => StateOf(x) == CatalogState.UpdateAvailable).Select(x => x.Id).ToList();
+            var backups = new List<string>();
+            _cancel = new CancellationTokenSource();
             SetBusy(true);
             SetProgress(true);
-            Func<string>? done = null;
-            var installed = new List<string>();
+            BatchResult<CatalogEntry> result;
             try
             {
-                foreach (var x in plan)
+                result = await ModGroups.RunOneByOneAsync(plan, async (x, index, ct) =>
                 {
                     if (StateOf(x) == CatalogState.AddedByHand)
                     {
@@ -1003,54 +1691,124 @@ namespace FOEReLauncher
                     var name = x.Name(Texts.Language);
                     var progress = new Progress<double>(f =>
                     {
-                        _progress.Value = f * 100;
+                        _progress.Value = ((index + f) / plan.Count) * 100;
                         var percent = (int)Math.Round(f * 100);
-                        SetStatus(() => Texts.T("cat.st.downloading", name, percent));
+                        SetStatus(() => plan.Count > 1 ? Texts.T("cat.st.downloading.n", index + 1, plan.Count, name, percent) : Texts.T("cat.st.downloading", name, percent));
                     });
-                    await _service.Mods.InstallAsync(x, progress, CancellationToken.None);
-                    installed.Add(name);
+                    await _service.Mods.InstallAsync(x, progress, ct, _catalog.FindGroup(x.Group));
                     ScanLocal();
-                }
-
-                // An update of an enabled code mod: the consent belongs to the old version, so ask for the new one now
-                // (the game asks in its own manager otherwise).
-                foreach (var x in plan.Where(x => x.IsCode && updating.Contains(x.Id)))
-                {
-                    var selection = _service.Mods.Settings.Load();
-                    if (selection.IsEnabled(x.Id) && !selection.HasConsent(x.Id, x.Version) &&
-                        ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("cat.confirm.reconsent", x.Name(Texts.Language), x.Version, x.Author.Length > 0 ? x.Author : "?"), Texts.T("cat.btn.allow"), warning: true))
-                    {
-                        selection.Consent[x.Id] = x.Version;
-                        _service.Mods.SaveSelection(selection);
-                    }
-                }
-
-                var names = string.Join(", ", installed);
-                var key = updating.Count == plan.Count ? "cat.st.updated.done" : "cat.st.installed.done";
-                var backupText = backups.Count > 0 ? " " + Texts.T("cat.st.backup", string.Join(", ", backups)) : string.Empty;
-                done = () => Texts.T(key, names) + backupText;
-            }
-            catch (Exception ex)
-            {
-                var text = ModUi.ErrorText(ex);
-                done = () => Texts.T("cat.st.failed", text);
+                }, _cancel.Token);
             }
             finally
             {
+                _cancel.Dispose();
+                _cancel = null;
                 SetProgress(false);
                 SetBusy(false);
                 ScanLocal();
-                Fill(SelectedId());
-                Changed?.Invoke(this, EventArgs.Empty);
             }
 
-            SetStatus(done);
+            // An update of an enabled code mod: the consent belongs to the old version, so ask for the new one now
+            // (the game asks in its own manager otherwise).
+            foreach (var x in result.Done.Where(x => x.IsCode && updating.Contains(x.Id)))
+            {
+                var selection = _service.Mods.Settings.Load();
+                if (selection.IsEnabled(x.Id) && !selection.HasConsent(x.Id, x.Version) &&
+                    ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("cat.confirm.reconsent", x.Name(Texts.Language), x.Version, x.Author.Length > 0 ? x.Author : "?"), Texts.T("cat.btn.allow"), warning: true))
+                {
+                    selection.Consent[x.Id] = x.Version;
+                    TrySave(selection);
+                }
+            }
+
+            var parts = new List<string>();
+            var installedNames = result.Done.Select(x => x.Name(Texts.Language)).ToList();
+            if (enable && !result.Cancelled)
+            {
+                var ids = groupMembers != null ? groupMembers.ToList() : targets.Where(t => result.Done.Contains(t)).Select(t => t.Id).ToList();
+                EnableAfter(ids.Where(id => _packages.Any(p => p.Id == id)).ToList(), allowed, groupName ?? ModUi.Names(installedNames), out var enabledText);
+                if (result.Done.Count > 0)
+                {
+                    parts.Add(groupName != null ? Texts.T("cat.st.group.installed", groupName, result.Done.Count, plan.Count) : string.Empty);
+                }
+
+                parts.Add(enabledText);
+            }
+            else if (result.Done.Count > 0)
+            {
+                var key = updating.Count == result.Done.Count ? "cat.st.updated.done" : "cat.st.installed.done";
+                parts.Add(Texts.T(key, ModUi.Names(installedNames)));
+            }
+
+            if (result.Cancelled)
+            {
+                parts.Add(Texts.T("cat.st.stopped", result.Done.Count, plan.Count));
+            }
+
+            parts.AddRange(refused);
+            parts.AddRange(result.Failed.Select(f => Texts.T("cat.st.failed.one", f.Key.Name(Texts.Language), ModUi.ErrorText(f.Value))));
+            if (backups.Count > 0)
+            {
+                parts.Add(Texts.T("cat.st.backup", string.Join(", ", backups)));
+            }
+
+            var done = string.Join(" ", parts.Where(x => x.Length > 0));
+            Fill(SelectedTag());
+            Changed?.Invoke(this, EventArgs.Empty);
+            SetStatus(() => done);
+        }
+
+        /// <summary>Switches the given installed mods on with the game's rules; code of <paramref name="allowed"/> counts as
+        /// allowed, other code asks once. Returns the status text.</summary>
+        private void EnableAfter(IList<string> ids, IList<string> allowed, string what, out string text)
+        {
+            ScanLocal();
+            var plan = ModGroups.PlanToggle(ids, true, _packages, _selection);
+            var name = new Func<string, string>(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id);
+            var ask = plan.NeedConsent.Where(id => !allowed.Contains(id)).ToList();
+            if (ask.Count > 0 &&
+                !ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("group.c.text", string.Join(", ", ask.Select(name))), Texts.T("mods.c.allow"), warning: true))
+            {
+                text = Texts.T("cat.st.notenabled");
+                return;
+            }
+
+            var consented = plan.NeedConsent.Select(id => _packages.First(p => p.Id == id)).ToList();
+            var skipped = plan.Skipped.Select(kv => kv.Value.Length > 0 ? Texts.T("group.skip.conflict", name(kv.Key), name(kv.Value)) : Texts.T("group.skip.broken", name(kv.Key))).ToList();
+            if (plan.Members.Count == 0 && plan.Outside.Count == 0)
+            {
+                text = string.Join(" ", new[] { Texts.T("cat.st.enabled.none", what) }.Concat(skipped));
+                return;
+            }
+
+            if (!TrySave(ModGroups.Apply(_selection, plan, consented)))
+            {
+                text = Texts.T("cat.st.notenabled");
+                return;
+            }
+
+            ScanLocal();
+            var also = plan.Outside.Count == 0 ? string.Empty : " " + Texts.T("group.alsoon", string.Join(", ", plan.Outside.Select(name)));
+            text = Texts.T("cat.st.enabled", ModUi.Names(plan.Members.Select(name))) + also + (skipped.Count > 0 ? " " + string.Join(" ", skipped) : string.Empty);
+        }
+
+        private bool TrySave(ModSelection selection)
+        {
+            try
+            {
+                _service.Mods.SaveSelection(selection);
+                _selection = selection;
+                return true;
+            }
+            catch (Exception ex) when (ex is ModOperationException || ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return false;
+            }
         }
 
         private void RemoveSelected()
         {
-            var e = Selected();
-            if (e == null || _busy)
+            if (_busy)
             {
                 return;
             }
@@ -1061,32 +1819,67 @@ namespace FOEReLauncher
                 return;
             }
 
-            var name = e.Name(Texts.Language);
-            var dependents = ModRules.ToDisable(e.Id, _packages, _selection);
-            var depNames = string.Join(", ", dependents.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
-            var question = dependents.Count > 0 ? Texts.T("cat.confirm.remove.deps", name, depNames) : Texts.T("cat.confirm.remove", name);
-            if (!ConfirmForm.Ask(Owner, Texts.T("mods.confirm.title"), question, Texts.T("cat.btn.remove"), warning: dependents.Count > 0))
+            var group = SelectedGroup();
+            var entries = group != null
+                ? GroupEntries(group).Where(x => StateOf(x) == CatalogState.Installed || StateOf(x) == CatalogState.UpdateAvailable).ToList()
+                : Selected() is CatalogEntry one ? new List<CatalogEntry> { one } : new List<CatalogEntry>();
+            if (entries.Count == 0)
             {
                 return;
             }
 
-            Func<string> done;
-            try
+            var ids = entries.Select(x => x.Id).ToList();
+            var dependents = ids.SelectMany(id => ModRules.ToDisable(id, _packages, _selection)).Where(x => !ids.Contains(x)).Distinct().ToList();
+            var depNames = string.Join(", ", dependents.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
+            string question;
+            if (group != null)
             {
-                var off = _service.Mods.Remove(e.Id);
-                var offNames = string.Join(", ", off.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
-                done = off.Count > 0 ? (Func<string>)(() => Texts.T("cat.st.removed.deps", name, offNames)) : () => Texts.T("cat.st.removed.done", name);
+                var info = _catalog?.FindGroup(group) ?? ModGroupInfo.FromFolder(group);
+                question = Texts.T("cat.confirm.remove.group", info.Name(Texts.Language), entries.Count, ModUi.Names(entries.Select(x => x.Name(Texts.Language)), 12));
+                if (dependents.Count > 0)
+                {
+                    question += " " + Texts.T("cat.confirm.remove.also", depNames);
+                }
             }
-            catch (Exception ex) when (ex is ModOperationException || ex is IOException || ex is UnauthorizedAccessException)
+            else
             {
-                var text = ModUi.ErrorText(ex);
-                done = () => Texts.T("cat.st.failed", text);
+                question = dependents.Count > 0 ? Texts.T("cat.confirm.remove.deps", entries[0].Name(Texts.Language), depNames) : Texts.T("cat.confirm.remove", entries[0].Name(Texts.Language));
             }
 
+            if (!ConfirmForm.Ask(Owner, Texts.T("mods.confirm.title"), question, group != null ? Texts.T("cat.btn.group.remove", entries.Count) : Texts.T("cat.btn.remove"), warning: true))
+            {
+                return;
+            }
+
+            var removed = new List<string>();
+            var off = new List<string>();
+            var failed = new List<string>();
+            foreach (var e in entries)
+            {
+                try
+                {
+                    off.AddRange(_service.Mods.Remove(e.Id).Where(x => !ids.Contains(x) && !off.Contains(x)));
+                    removed.Add(e.Name(Texts.Language));
+                }
+                catch (Exception ex) when (ex is ModOperationException || ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    failed.Add(Texts.T("cat.st.removefailed.one", e.Name(Texts.Language), ModUi.ErrorText(ex)));
+                }
+            }
+
+            var offNames = string.Join(", ", off.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
+            var parts = new List<string>();
+            if (removed.Count > 0)
+            {
+                parts.Add(off.Count > 0 ? Texts.T("cat.st.removed.deps", ModUi.Names(removed), offNames) : Texts.T("cat.st.removed.done", ModUi.Names(removed)));
+            }
+
+            parts.AddRange(failed);
+            var done = string.Join(" ", parts);
             ScanLocal();
-            Fill(e.Id);
+            Fill(SelectedTag());
             Changed?.Invoke(this, EventArgs.Empty);
-            SetStatus(done);
+            SetStatus(() => done);
         }
 
         private void SetProgress(bool visible)
@@ -1106,7 +1899,7 @@ namespace FOEReLauncher
         private void ShowStatus()
         {
             var text = _statusText();
-            _status.ForeColor = MainForm.StatusColor;
+            _status.ForeColor = Theme.Dim;
             if (text.Length == 0)
             {
                 if (_running)
@@ -1129,49 +1922,54 @@ namespace FOEReLauncher
         }
     }
 
-    /// <summary>A question in the launcher's palette: the text, a confirm button and Cancel.</summary>
+    /// <summary>A question in the launcher's look: the text, a confirm button and Cancel.</summary>
     public sealed class ConfirmForm : Form
     {
-        private const int Pad = 20;
+        private static int Pad => Theme.S(20);
 
         private ConfirmForm(string title, string text, string confirm, bool warning)
         {
             Text = title;
             BackColor = MainForm.Background;
             ForeColor = MainForm.BodyColor;
-            Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point);
-            AutoScaleMode = AutoScaleMode.Font;
+            Font = Theme.Font(10f);
+            AutoScaleMode = AutoScaleMode.None;
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
+            Theme.DarkTitleBar(this);
 
-            var width = 420;
+            var width = Theme.S(460);
             var label = new Label
             {
                 Text = text,
                 AutoSize = false,
-                ForeColor = warning ? MainForm.TitleColor : MainForm.BodyColor,
+                ForeColor = warning ? Theme.Amber : Theme.Bright,
                 BackColor = Color.Transparent,
                 UseMnemonic = false
             };
             var size = TextRenderer.MeasureText(text, Font, new Size(width - (Pad * 2), int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix);
             label.Bounds = new Rectangle(Pad, Pad, width - (Pad * 2), size.Height + 4);
-            var ok = MainForm.MakeButton(confirm, warning ? ColorTranslator.FromHtml("#A83A44") : MainForm.Accent, Color.White, 9.75f, FontStyle.Regular);
+            var ok = MainForm.MakeButton(confirm, warning ? PipButtonKind.Danger : PipButtonKind.Primary, 9.75f, FontStyle.Bold);
             ok.DialogResult = DialogResult.OK;
-            var cancel = MainForm.MakeButton(Texts.T("btn.cancel"), MainForm.Secondary, MainForm.SecondaryText, 9.75f, FontStyle.Regular);
+            var cancel = MainForm.MakeButton(Texts.T("btn.cancel"), PipButtonKind.Normal, 9.75f, FontStyle.Regular);
             cancel.DialogResult = DialogResult.Cancel;
-            var okWidth = Math.Max(120, TextRenderer.MeasureText(confirm, ok.Font).Width + 24);
-            var y = label.Bottom + 16;
-            cancel.Bounds = new Rectangle(width - Pad - 110, y, 110, 32);
-            ok.Bounds = new Rectangle(cancel.Left - 10 - okWidth, y, okWidth, 32);
-            ClientSize = new Size(width, y + 32 + Pad);
+            var buttonHeight = Theme.S(34);
+            var okWidth = Math.Max(Theme.S(130), TextRenderer.MeasureText(confirm, ok.Font).Width + Theme.S(32));
+            var cancelWidth = Math.Max(Theme.S(110), TextRenderer.MeasureText(cancel.Text, cancel.Font).Width + Theme.S(32));
+            var y = label.Bottom + Theme.S(16);
+            cancel.Bounds = new Rectangle(width - Pad - cancelWidth, y, cancelWidth, buttonHeight);
+            ok.Bounds = new Rectangle(cancel.Left - Theme.S(10) - okWidth, y, okWidth, buttonHeight);
+            ClientSize = new Size(width, y + buttonHeight + Pad);
             Controls.AddRange(new Control[] { label, ok, cancel });
             AcceptButton = ok;
             CancelButton = cancel;
             Shown += (s, e) => cancel.Focus();
         }
+
+        protected override void OnPaintBackground(PaintEventArgs e) => Theme.PaintBackground(e.Graphics, ClientRectangle, BackColor, Point.Empty);
 
         /// <summary>Hook for tests: answers instead of a window when set.</summary>
         internal static Func<string, string, bool>? Answer { get; set; }

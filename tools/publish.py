@@ -6,7 +6,7 @@
                                [--repo OWNER/NAME] [--launcher EXE]
                                [--catalogue-mods LIST]
   python tools/publish.py mods --mods DIR_OR_LIST --out DIR [--base-url URL] [--prev DIR] [--texts FILE]
-                               [--repo OWNER/NAME]
+                               [--groups FILE] [--regroup] [--drop IDS] [--repo OWNER/NAME]
   python tools/publish.py upload --out DIR [--repo OWNER/NAME] [--dry-run]
   python tools/publish.py version [--game-repo DIR]
 
@@ -21,9 +21,10 @@ With --base-url http://127.0.0.1:PORT/ the pack urls are PORT-local (BASE/assets
 server started in --out serves a complete test site at BASE/site/. Without it, pack urls are release
 asset urls https://github.com/REPO/releases/download/TAG/NAME.
 
-`pack --catalogue-mods` (comma list of folder globs under the build; default
-"Mods/examples/*,Mods/reforged_balance"; "" keeps every mod) leaves those mod folders out of the game packs:
-they are published in the mod catalogue instead (`mods`), so the game ships with the reborn_* mods only.
+`pack --catalogue-mods` (comma list of folder globs under the build; default "Mods/*"; "" keeps every mod)
+leaves those mod folders out of the game packs: mods are published in the mod catalogue instead (`mods`), so by
+default no mod ships inside the game packs. The example mods ship as the archive "Mod examples.zip" in the
+game folder, which is an ordinary game file.
 
 `mods` writes the catalogue: one deterministic zip per mod folder (package.json at the zip root), named
 <id>-<version>-<sha256 first 16>.zip, into assets/, and site/downloads/mods/catalog.json. --mods takes a mod
@@ -31,6 +32,16 @@ folder, a folder of mod folders (one level of group folders, as the game scans M
 Russian name and description come from catalog.ru.json beside the mod's package.json ({"name": .., "description":
 ..}) or from --texts (a JSON file {"<id>": {"name": .., "description": ..}}); English from the manifest. With
 --prev the catalogue keeps the entries of mods not given this time, and an unchanged archive keeps its old url.
+
+Mod groups (`mods --groups FILE`): the file describes the groups, {"<group id>": {"name": {"ru": .., "en": ..},
+"description": {"ru": .., "en": ..}, "order": N, "mods": ["<mod id>", ..]}}. A mod belongs to a group when the
+group's "mods" list names it, or else when the folder that holds its mod folder is named like the group
+(mods/extras/my_mod -> group "extras"); other mods are listed on their own. Installed mods of a group go into
+Mods/<group id>/<mod id>/. catalog.json then has a "groups" list (the groups its mods use, by order) and a "group" field on
+each grouped mod; launchers without groups ignore both. Entries kept from --prev keep their group. The groups
+of this repository are in tools/catalog-groups.json. `--regroup` (needs --prev and --groups) packs nothing: it
+copies the --prev catalogue and only sets the groups of the mods found in --mods, so every archive and url stays
+as published (no new assets to upload). `--drop a,b` leaves those --prev entries out of the new catalogue.
 
 `--version auto` (or the `version` command) gives v0.1.N, N = commit count of the game repository.
 Pack grouping: RULES below.
@@ -54,7 +65,7 @@ GAME_EXE = "FOEReborn.exe"
 MAX_PACK = 300 * 1024 * 1024
 FORMAT = 1
 CATALOG_FORMAT = 1
-DEFAULT_CATALOGUE_MODS = "Mods/examples/*,Mods/reforged_balance"
+DEFAULT_CATALOGUE_MODS = "Mods/*"
 MOD_ID = re.compile(r"^[a-z0-9][a-z0-9_.\-]*$")
 # Metadata beside a mod's package.json that is not part of the mod archive.
 MOD_SKIP = {"catalog.ru.json"}
@@ -412,6 +423,23 @@ def cmd_mods(a):
     base_url = a.base_url.rstrip("/") + "/" if a.base_url else None
     repo = a.repo or DEFAULT_REPO
     texts = load_json(a.texts, {}) if a.texts else {}
+    groups = load_json(a.groups, None) if a.groups else {}
+    if not isinstance(groups, dict) or any(not MOD_ID.match(g) or not isinstance(v, dict) or
+                                           not isinstance(v.get("mods", []), list) for g, v in groups.items()):
+        die("--groups must be a JSON object {\"<group id>\": {\"name\": .., \"description\": .., \"order\": N, "
+            "\"mods\": [..]}}: " + str(a.groups))
+    group_of_id = {}
+    for gid, g in groups.items():
+        for mid in g.get("mods", []):
+            if mid in group_of_id:
+                die("mod %s is in two groups: %s, %s" % (mid, group_of_id[mid], gid))
+            group_of_id[mid] = gid
+
+    def group_for(folder, mid):
+        if mid in group_of_id:
+            return group_of_id[mid]
+        parent = os.path.basename(os.path.dirname(folder))
+        return parent if parent in groups else ""
     prev_state = load_json(os.path.join(a.prev, "publish-state.json"), None) if a.prev else None
     if a.prev and (prev_state is None or prev_state.get("kind") != "mods"):
         die("--prev is not a mods output: " + a.prev)
@@ -423,6 +451,9 @@ def cmd_mods(a):
     entries = {}
     new_archives = []
     lines = []
+    if a.regroup and (not a.prev or not a.groups):
+        die("--regroup needs --prev and --groups")
+    prev_by_id = {e["id"]: e for e in prev_cat.get("mods", [])}
     for folder in mod_folders(a.mods):
         man = load_json(os.path.join(folder, "package.json"), None)
         if not isinstance(man, dict) or not man.get("id") or not man.get("version"):
@@ -432,6 +463,18 @@ def cmd_mods(a):
             die("bad mod id: " + mid)
         if mid in entries:
             die("two folders with id " + mid)
+        if a.regroup:
+            if mid not in prev_by_id:
+                die("--regroup: " + mid + " is not in the --prev catalogue")
+            entry = dict(prev_by_id[mid])
+            entry.pop("group", None)
+            group = group_for(folder, mid)
+            if group:
+                entry["group"] = group
+            entries[mid] = entry
+            lines.append("%-24s %-8s %-5s %9d  regrouped%s" % (mid, entry["version"], entry["kind"], entry["size"],
+                                                               "  group " + group if group else ""))
+            continue
         rel_files = []
         for dirpath, dirnames, filenames in os.walk(folder):
             dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
@@ -476,14 +519,38 @@ def cmd_mods(a):
         homepage = man.get("homepage") or man.get("url")
         if homepage:
             entry["homepage"] = homepage
+        group = group_for(folder, mid)
+        if group:
+            entry["group"] = group
         entries[mid] = entry
-        lines.append("%-24s %-8s %-5s %9d  %s" % (mid, ver, entry["kind"], size, status))
+        lines.append("%-24s %-8s %-5s %9d  %s%s" % (mid, ver, entry["kind"], size, status,
+                                                   "  group " + group if group else ""))
     for e in prev_cat.get("mods", []):
+        if e["id"] not in entries and a.drop and e["id"] in a.drop.split(","):
+            lines.append("%-24s dropped" % e["id"])
+            continue
         if e["id"] not in entries:
+            if e["id"] in group_of_id:
+                e = dict(e, group=group_of_id[e["id"]])
             entries[e["id"]] = e
             lines.append("%-24s %-8s %-5s %9d  kept from --prev" % (e["id"], e["version"], e["kind"], e["size"]))
     now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    catalog = {"format": CATALOG_FORMAT, "builtAt": now, "mods": [entries[k] for k in sorted(entries)]}
+    catalog = {"format": CATALOG_FORMAT, "builtAt": now}
+    used = sorted({e["group"] for e in entries.values() if e.get("group")})
+    if used:
+        prev_groups = {g["id"]: g for g in prev_cat.get("groups", []) if isinstance(g, dict) and g.get("id")}
+        listed = []
+        for gid in used:
+            if gid in groups:
+                g = groups[gid]
+                listed.append({"id": gid, "name": g.get("name") or gid, "description": g.get("description") or "",
+                               "order": int(g.get("order") or 0)})
+            elif gid in prev_groups:
+                listed.append(prev_groups[gid])
+            else:
+                listed.append({"id": gid, "name": gid, "description": "", "order": 0})
+        catalog["groups"] = sorted(listed, key=lambda g: (g.get("order") or 0, g["id"]))
+    catalog["mods"] = [entries[k] for k in sorted(entries)]
     dump_json(os.path.join(out, "site", "downloads", "mods", "catalog.json"), catalog)
     dump_json(os.path.join(out, "publish-state.json"),
               {"kind": "mods", "tag": tag, "repo": repo, "baseUrl": base_url, "newArchives": new_archives})
@@ -516,6 +583,11 @@ def main():
     md.add_argument("--base-url")
     md.add_argument("--prev")
     md.add_argument("--texts")
+    md.add_argument("--groups", help="JSON file describing the mod groups; a mod is in group G when its folder sits in "
+                                     "a folder named G (see the description above)")
+    md.add_argument("--drop", help="comma list of mod ids --prev has that the new catalogue leaves out")
+    md.add_argument("--regroup", action="store_true",
+                    help="copy the --prev catalogue and only set the groups (no packing, no new archives)")
     md.add_argument("--repo")
     u = sub.add_parser("upload")
     u.add_argument("--out", required=True)

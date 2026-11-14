@@ -102,6 +102,45 @@ namespace FOEReLauncher
 
         public InstalledMods LoadRecord() => InstalledMods.Load(RecordFile);
 
+        /// <summary>Mods installed from the catalogue before it had groups take the group the catalogue gives them now
+        /// (their folders stay where they are). Returns whether the record changed.</summary>
+        public bool AdoptGroups(ModCatalog catalog)
+        {
+            var record = LoadRecord();
+            var changed = false;
+            foreach (var mine in record.Mods)
+            {
+                var entry = catalog.Find(mine.Id);
+                if (entry == null || entry.Group == mine.Group)
+                {
+                    continue;
+                }
+
+                mine.Group = entry.Group;
+                record.KeepGroup(catalog.FindGroup(entry.Group));
+                changed = true;
+            }
+
+            foreach (var g in record.Groups.ToList())
+            {
+                // Newer texts of a kept group.
+                var fresh = catalog.FindGroup(g.Id);
+                if (fresh != null && fresh.Name("ru") + fresh.Name("en") + fresh.Description("ru") + fresh.Description("en") + fresh.Order !=
+                    g.Name("ru") + g.Name("en") + g.Description("ru") + g.Description("en") + g.Order)
+                {
+                    record.KeepGroup(fresh);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                record.Save(RecordFile);
+            }
+
+            return changed;
+        }
+
         /// <summary>installed-files.json for reading only (cached, see <see cref="InstalledState.LoadCached"/>): the mod
         /// lists ask for it for every row.</summary>
         public InstalledState GameState() => InstalledState.LoadCached(Path.Combine(Root, "installed-files.json"));
@@ -138,6 +177,73 @@ namespace FOEReLauncher
             var mine = record.Find(p.Id);
             return mine != null && string.Equals(mine.Dir, p.RelDir, StringComparison.OrdinalIgnoreCase) ? ModSource.Catalogue : ModSource.Hand;
         }
+
+        /// <summary>The group a mod of the list belongs to: the catalogue group it was installed from, else the group
+        /// folder it sits in (Mods/&lt;group&gt;/&lt;mod&gt;, as the game scans it); empty for a mod on its own.</summary>
+        public string GroupOf(ModPackage p, InstalledMods? record = null)
+        {
+            record ??= LoadRecord();
+            var mine = record.Find(p.Id);
+            if (mine != null && mine.Group.Length > 0 && string.Equals(mine.Dir, p.RelDir, StringComparison.OrdinalIgnoreCase))
+            {
+                return mine.Group;
+            }
+
+            var parts = p.RelDir.Split('/');
+            return !p.Core && parts.Length == 3 && ModCatalog.IsSafeId(parts[1]) ? parts[1] : string.Empty;
+        }
+
+        /// <summary>Name and description of a group for the Mods tab: as kept from the catalogue, else from a group.json
+        /// in its folder ({"name": {"ru", "en"}, "description": ..}), else its folder name.</summary>
+        public ModGroupInfo GroupInfo(string id, InstalledMods? record = null)
+        {
+            record ??= LoadRecord();
+            var kept = record.FindGroup(id);
+            if (kept != null)
+            {
+                return kept;
+            }
+
+            try
+            {
+                var file = Path.Combine(ModsDir, id, "group.json");
+                if (ModCatalog.IsSafeId(id) && File.Exists(file))
+                {
+                    var o = Json.Obj(Json.Parse(File.ReadAllText(file)));
+                    o["id"] = id;
+                    var g = ModGroupInfo.Read(o);
+                    if (g != null)
+                    {
+                        return g;
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is IOException || ex is FormatException || ex is UnauthorizedAccessException)
+            {
+                // A broken group.json: the folder name stays.
+            }
+
+            return KnownFolders.TryGetValue(id, out var known) ? known : ModGroupInfo.FromFolder(id);
+        }
+
+        /// <summary>Group folders the game's own files name: the example mods unpacked from "Mod examples.zip".</summary>
+        private static readonly Dictionary<string, ModGroupInfo> KnownFolders = new Dictionary<string, ModGroupInfo>(StringComparer.Ordinal)
+        {
+            ["examples"] = new ModGroupInfo
+            {
+                Id = "examples",
+                NameRu = "Примеры модов",
+                NameEn = "Example mods",
+                DescriptionRu = "Моды-образцы из архива «Mod examples.zip» в папке игры.",
+                DescriptionEn = "Sample mods from \"Mod examples.zip\" in the game folder.",
+                Order = 100
+            }
+        };
+
+        /// <summary>The archive of example mods the game ships beside itself, when it is there.</summary>
+        public bool HasExamplesArchive => File.Exists(Path.Combine(GameDir, ExamplesArchive));
+
+        public const string ExamplesArchive = "Mod examples.zip";
 
         public CatalogState StateOf(CatalogEntry entry, IList<ModPackage> packages, InstalledState? game = null, InstalledMods? record = null)
         {
@@ -229,7 +335,7 @@ namespace FOEReLauncher
 
         /// <summary>Downloads (with resume), checks and installs or updates one catalogue mod. A folder of the mod that
         /// the launcher did not install must be moved away first (<see cref="BackupHandAdded"/>).</summary>
-        public async Task<InstalledMod> InstallAsync(CatalogEntry entry, IProgress<double>? progress, CancellationToken ct)
+        public async Task<InstalledMod> InstallAsync(CatalogEntry entry, IProgress<double>? progress, CancellationToken ct, ModGroupInfo? group = null)
         {
             EnsureGameStopped();
             var record = LoadRecord();
@@ -273,7 +379,7 @@ namespace FOEReLauncher
             }
 
             EnsureGameStopped();
-            var relDir = mine != null && existing != null ? mine.Dir : "Mods/" + entry.Id;
+            var relDir = mine != null && existing != null ? mine.Dir : NewModDir(entry);
             var target = PathSafety.Combine(GameDir, relDir);
             if (mine != null)
             {
@@ -324,13 +430,27 @@ namespace FOEReLauncher
                 Sha256 = entry.Sha256,
                 Dir = relDir,
                 InstalledAt = InstalledMods.Now(),
+                Group = entry.Group,
                 Files = files.Select(f => new InstalledModFile(relDir + "/" + f.Path, f.Size, f.Sha256)).ToList()
             };
             record.Mods.RemoveAll(m => m.Id == entry.Id);
             record.Mods.Add(installed);
+            record.KeepGroup(group);
             record.Save(RecordFile);
             TryDeleteFile(archive);
             return installed;
+        }
+
+        /// <summary>Where a new catalogue mod goes: into its group's folder (Mods/examples/example_home), as the game
+        /// scans one level of group folders; a group folder that is itself a mod (has package.json) is not used.</summary>
+        private string NewModDir(CatalogEntry entry)
+        {
+            if (entry.Group.Length > 0 && ModCatalog.IsSafeId(entry.Group) && !File.Exists(Path.Combine(ModsDir, entry.Group, "package.json")))
+            {
+                return "Mods/" + entry.Group + "/" + entry.Id;
+            }
+
+            return "Mods/" + entry.Id;
         }
 
         /// <summary>Unpacks an archive into <paramref name="staging"/> after checking every entry; returns the files
@@ -515,6 +635,14 @@ namespace FOEReLauncher
             if (Directory.Exists(dir))
             {
                 RemoveEmptyDirs(dir, keepRoot: false);
+            }
+
+            // A group folder the last mod left: removed when empty.
+            var parent = Path.GetDirectoryName(dir.TrimEnd('/', '\\'));
+            if (parent != null && !string.Equals(Path.GetFullPath(parent).TrimEnd('\\'), Path.GetFullPath(ModsDir).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase) &&
+                Path.GetFullPath(parent).StartsWith(Path.GetFullPath(ModsDir), StringComparison.OrdinalIgnoreCase))
+            {
+                RemoveEmptyDirs(parent, keepRoot: false);
             }
 
             record.Mods.Remove(mine);

@@ -228,7 +228,7 @@ namespace FOEReLauncher.Tests
             (requires.Length > 0 ? ",\"requires\":[" + requires + "]" : string.Empty) + extra + "}";
 
         /// <summary>A fake game with the real package layout: classic and reborn in Content/, reborn_home shipped in Mods/,
-        /// and an examples group that the default --catalogue-mods leaves out of the packs.</summary>
+        /// and an examples group that --catalogue-mods leaves out of the packs.</summary>
         private void MakeGame()
         {
             _build.Write("FOEReborn.exe", "fake exe");
@@ -267,6 +267,8 @@ namespace FOEReLauncher.Tests
         [Fact]
         public async Task Catalogue_Install_Update_Remove_HandAdded_GameUpdate()
         {
+            // A build that still ships one mod (reborn_home) inside the game, so a requirement "with the game" is covered.
+            _site.CatalogueMods = "Mods/examples/*,Mods/reforged_balance";
             MakeGame();
             MakeMods();
             _site.Publish(_build.Path, "v0.1.1");
@@ -274,7 +276,7 @@ namespace FOEReLauncher.Tests
             _site.Start();
             await InstallGame();
 
-            // The default --catalogue-mods left the examples and reforged_balance out of the game.
+            // --catalogue-mods left the examples and reforged_balance out of the game.
             Assert.True(File.Exists(Game("Mods/reborn_home/package.json")));
             Assert.False(Directory.Exists(Game("Mods/examples")));
             Assert.False(Directory.Exists(Game("Mods/reforged_balance")));
