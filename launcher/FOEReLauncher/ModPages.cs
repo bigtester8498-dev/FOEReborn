@@ -251,28 +251,60 @@ namespace FOEReLauncher
 
         protected override void OnDrawItem(DrawListViewItemEventArgs e)
         {
-            var look = LookOf(e.Item);
+            // The row is composed off screen and shown in one copy: drawn straight on screen, the row showed empty
+            // for a moment between its background and its text whenever Windows repainted it (mouse moves, clicks).
             var row = e.Bounds;
-            var selected = e.Item.Selected;
+            if (row.Width <= 0 || row.Height <= 0)
+            {
+                return;
+            }
+
+            // The buffer covers the client area from (0, 0), so GDI text (which ignores a Graphics offset) lands where it
+            // should; only the row is copied to the screen.
+            var area = new Rectangle(0, 0, Math.Max(ClientSize.Width, row.Right), Math.Max(ClientSize.Height, row.Bottom));
+            using (var buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, area))
+            {
+                DrawRow(buffer.Graphics, e.Item, row);
+                var src = buffer.Graphics.GetHdc();
+                var dst = e.Graphics.GetHdc();
+                try
+                {
+                    BitBlt(dst, row.X, row.Y, row.Width, row.Height, src, row.X, row.Y, 0x00CC0020);
+                }
+                finally
+                {
+                    e.Graphics.ReleaseHdc(dst);
+                    buffer.Graphics.ReleaseHdc(src);
+                }
+            }
+        }
+
+        [DllImport("gdi32.dll")]
+        private static extern bool BitBlt(IntPtr dst, int x, int y, int w, int h, IntPtr src, int sx, int sy, int rop);
+
+        private void DrawRow(Graphics g, ListViewItem item, Rectangle row)
+        {
+            var look = LookOf(item);
+            var selected = item.Selected;
             using (var back = new SolidBrush(selected ? Theme.FillSelected : look.IsGroup ? Theme.GroupFill : Theme.Panel))
             {
-                e.Graphics.FillRectangle(back, row);
+                g.FillRectangle(back, row);
             }
 
             // The PipBuck's rows: each in a thin frame, the chosen one in a bright one.
             var frame = new Rectangle(row.X + 1, row.Y + 1, row.Width - 2, row.Height - 2);
-            Theme.DrawFrame(e.Graphics, frame, selected ? (Focused ? Theme.Bright : Theme.FrameBright) : look.IsGroup ? Theme.Hex("#0E7A50") : Theme.Hex("#063A26"));
+            Theme.DrawFrame(g, frame, selected ? (Focused ? Theme.Bright : Theme.FrameBright) : look.IsGroup ? Theme.Hex("#0E7A50") : Theme.Hex("#063A26"));
             if (CheckBoxes)
             {
-                Theme.DrawCheck(e.Graphics, CheckRect(e.Item, row), look.IsGroup ? look.Check : e.Item.Checked ? CheckState.Checked : CheckState.Unchecked, look.CheckEnabled);
+                Theme.DrawCheck(g, CheckRect(item, row), look.IsGroup ? look.Check : item.Checked ? CheckState.Checked : CheckState.Unchecked, look.CheckEnabled);
             }
 
             // The whole row is drawn here, cells included: on mouse hover Windows repaints a row with DrawItem alone,
             // without DrawSubItem, so cells drawn only there vanished under the row background.
-            for (var i = 0; i < e.Item.SubItems.Count && i < Columns.Count; i++)
+            for (var i = 0; i < item.SubItems.Count && i < Columns.Count; i++)
             {
-                var cell = i == 0 ? new Rectangle(row.X, row.Y, Columns[0].Width, row.Height) : e.Item.SubItems[i].Bounds;
-                DrawCell(e.Graphics, e.Item, e.Item.SubItems[i], i, cell, look);
+                var cell = i == 0 ? new Rectangle(row.X, row.Y, Columns[0].Width, row.Height) : item.SubItems[i].Bounds;
+                DrawCell(g, item, item.SubItems[i], i, cell, look);
             }
         }
 
@@ -391,6 +423,31 @@ namespace FOEReLauncher
             }
 
             base.OnKeyDown(e);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            // The dark Explorer theme (for the scroll bars) also brings the stock hover highlight: on every mouse move
+            // Windows erased the row under the mouse and repainted it in its own blue, so rows blinked. The lists have
+            // no hover look of their own, so hot tracking is refused (LVN_HOTTRACK, reflected WM_NOTIFY).
+            const int WmReflectNotify = 0x204E;
+            const int LvnHotTrack = -121;
+            if (m.Msg == WmReflectNotify && Marshal.ReadInt32(m.LParam, IntPtr.Size * 2) == LvnHotTrack)
+            {
+                m.Result = (IntPtr)1;
+                return;
+            }
+
+            // The list is double buffered and every row paints its whole background, so the separate erase only
+            // showed an empty row for a moment before the paint.
+            const int WmEraseBkgnd = 0x0014;
+            if (m.Msg == WmEraseBkgnd)
+            {
+                m.Result = (IntPtr)1;
+                return;
+            }
+
+            base.WndProc(ref m);
         }
 
         protected override void OnGotFocus(EventArgs e)
