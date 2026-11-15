@@ -22,5 +22,20 @@
       "reborn_autoopen",
       "reborn_hd"
     ]
+  },
+  "voice": {
+    "name": {
+      "ru": "Озвучка",
+      "en": "Voice acting"
+    },
+    "description": {
+      "ru": "Голоса для диалогов: мод «Озвучка диалогов» и озвучка на нужном языке.",
+      "en": "Voices for the dialogues: the Voice acting mod and a voice pack for your language."
+    },
+    "order": 20,
+    "mods": [
+      "reborn_voice",
+      "reborn_voice_ru_v1"
+    ]
   }
 }
