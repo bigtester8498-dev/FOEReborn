@@ -24,6 +24,8 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <!-- FileSystem.DeleteDirectory with the Recycle Bin for a mod removed from the Mods tab. -->
+    <Reference Include="Microsoft.VisualBasic" />
   </ItemGroup>
 
   <ItemGroup>

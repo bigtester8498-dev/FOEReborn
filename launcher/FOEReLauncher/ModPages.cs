@@ -628,6 +628,7 @@ namespace FOEReLauncher
         private readonly Button _downButton;
         private readonly Button _refreshButton;
         private readonly Button _folderButton;
+        private readonly Button _removeButton;
         private readonly Label _status;
 
         private List<ModPackage> _packages = new List<ModPackage>();
@@ -669,8 +670,10 @@ namespace FOEReLauncher
             _refreshButton.Click += (s, e) => Reload();
             _folderButton = ModUi.MakeButton();
             _folderButton.Click += (s, e) => OpenFolder();
+            _removeButton = ModUi.MakeButton();
+            _removeButton.Click += (s, e) => RemoveSelected();
             _status = ModUi.MakeLine();
-            Controls.AddRange(new Control[] { _hint, _examples, _listBox, _detailsBox, _upButton, _downButton, _refreshButton, _folderButton, _status });
+            Controls.AddRange(new Control[] { _hint, _examples, _listBox, _detailsBox, _upButton, _downButton, _removeButton, _refreshButton, _folderButton, _status });
             Resize += (s, e) => LayoutPage();
         }
 
@@ -689,6 +692,7 @@ namespace FOEReLauncher
             _downButton.Text = Texts.T("mods.btn.down");
             _refreshButton.Text = Texts.T("mods.btn.refresh");
             _folderButton.Text = Texts.T("mods.btn.folder");
+            _removeButton.Text = Texts.T("mods.btn.remove");
             Fill(SelectedTag());
             ShowStatus();
             LayoutPage();
@@ -711,7 +715,7 @@ namespace FOEReLauncher
             var statusHeight = (_status.Font.Height * 2) + 2;
             _status.Bounds = new Rectangle(0, height - statusHeight, width, statusHeight);
             var rowY = _status.Top - Theme.S(6) - ModUi.ButtonHeight;
-            ModUi.Row(rowY, width, _upButton, _downButton, _refreshButton, _folderButton);
+            ModUi.Row(rowY, width, _upButton, _downButton, _removeButton, _refreshButton, _folderButton);
             // The list keeps at least two thirds of the room above the buttons; the details box takes the rest.
             var detailsHeight = Math.Max(Theme.S(64), Math.Min(Theme.S(140), (rowY - _examples.Bottom) / 3));
             _detailsBox.Bounds = new Rectangle(0, rowY - Theme.S(8) - detailsHeight, width, detailsHeight);
@@ -899,7 +903,67 @@ namespace FOEReLauncher
 
             _upButton.Enabled = up;
             _downButton.Enabled = down;
+            _removeButton.Enabled = can && Removable(tag) != null;
             _folderButton.Enabled = _service.IsGameInstalled();
+        }
+
+        /// <summary>The selected mod when it can be removed here: not a group row, not the game's own package, not one
+        /// that comes with the game.</summary>
+        private ModPackage? Removable(string? tag)
+        {
+            if (tag == null || ModUi.GroupOfTag(tag) != null)
+            {
+                return null;
+            }
+
+            var p = _packages.FirstOrDefault(x => x.Id == tag && !x.Core && x.State != ModState.Duplicate);
+            return p != null && _service.Mods.SourceOf(p) != ModSource.Game ? p : null;
+        }
+
+        private void RemoveSelected()
+        {
+            if (_running)
+            {
+                SetStatus(() => Texts.T("st.blocked.running"));
+                return;
+            }
+
+            var p = Removable(SelectedTag());
+            if (p == null)
+            {
+                return;
+            }
+
+            var name = p.Manifest.DisplayName;
+            var byHand = _service.Mods.SourceOf(p) == ModSource.Hand;
+            var dependents = ModRules.ToDisable(p.Id, _packages, _selection).Where(x => x != p.Id).ToList();
+            var depNames = string.Join(", ", dependents.Select(id => _packages.FirstOrDefault(x => x.Id == id)?.Manifest.DisplayName ?? id));
+            var question = dependents.Count > 0 ? Texts.T("cat.confirm.remove.deps", name, depNames) : Texts.T("cat.confirm.remove", name);
+            if (byHand)
+            {
+                question += " " + Texts.T("mods.confirm.recycle");
+            }
+
+            if (!ConfirmForm.Ask(FindForm(), Texts.T("mods.confirm.title"), question, Texts.T("mods.btn.remove"), warning: true))
+            {
+                return;
+            }
+
+            string done;
+            try
+            {
+                var off = _service.Mods.RemoveAny(p.Id).Where(x => x != p.Id).ToList();
+                var offNames = string.Join(", ", off.Select(id => _packages.FirstOrDefault(x => x.Id == id)?.Manifest.DisplayName ?? id));
+                done = off.Count > 0 ? Texts.T("cat.st.removed.deps", name, offNames) : Texts.T("cat.st.removed.done", name);
+            }
+            catch (Exception ex) when (ex is ModOperationException || ex is IOException || ex is UnauthorizedAccessException || ex is OperationCanceledException)
+            {
+                done = Texts.T("cat.st.removefailed.one", name, ModUi.ErrorText(ex));
+            }
+
+            Reload();
+            Changed?.Invoke(this, EventArgs.Empty);
+            SetStatus(() => done);
         }
 
         private void ShowDetails()

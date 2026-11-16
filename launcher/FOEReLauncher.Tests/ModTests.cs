@@ -385,6 +385,17 @@ namespace FOEReLauncher.Tests
             await service.Mods.InstallAsync(catalog.Find("ex_data")!, null, CancellationToken.None);
             Assert.True(File.Exists(Game("Mods/ex_data/defs/x.json")));
 
+            // The Mods tab's Remove: a mod added by hand leaves by its folder (to the Recycle Bin), a catalogue mod by
+            // its recorded files, even when the catalogue no longer lists it.
+            _install.Write("game/Mods/by_hand/package.json", Manifest("by_hand", "1.0.0"));
+            Assert.Equal(ModSource.Hand, service.Mods.SourceOf(service.Mods.Scan(out sel).First(p => p.Id == "by_hand")));
+            Assert.Empty(service.Mods.RemoveAny("by_hand"));
+            Assert.False(Directory.Exists(Game("Mods/by_hand")));
+            Assert.Empty(service.Mods.RemoveAny("ex_data"));
+            Assert.Null(service.Mods.LoadRecord().Find("ex_data"));
+            Assert.False(File.Exists(Game("Mods/ex_data/defs/x.json")));
+            Assert.Equal("mods.err.notfound", Assert.Throws<ModOperationException>(() => service.Mods.RemoveAny("ex_data")).Key);
+
             // The cheap check: version.json names the installed version and the manifest is cached.
             var lines = _site.ReadServerLog().Length;
             var check = Service();

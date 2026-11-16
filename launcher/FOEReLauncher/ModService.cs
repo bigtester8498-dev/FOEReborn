@@ -662,6 +662,46 @@ namespace FOEReLauncher
             return dependents;
         }
 
+        /// <summary>Removes any mod from the Mods tab: a catalogue mod by its recorded files (<see cref="Remove"/>, also one
+        /// the catalogue no longer lists), a mod put there by hand by sending its folder to the Recycle Bin. Mods that
+        /// come with the game are not removed. Returns the enabled mods switched off because they require it.</summary>
+        public List<string> RemoveAny(string id)
+        {
+            EnsureGameStopped();
+            var all = ModRules.Discover(Path.Combine(GameDir, "Content"), ModsDir);
+            var p = all.FirstOrDefault(x => x.Id == id && !x.Core && x.State != ModState.Duplicate)
+                    ?? throw new ModOperationException("mods.err.notfound", id);
+            switch (SourceOf(p))
+            {
+                case ModSource.Game:
+                    throw new ModOperationException("mods.err.withgame", id);
+                case ModSource.Catalogue:
+                    return Remove(id);
+            }
+
+            var dir = Path.GetFullPath(p.Dir).TrimEnd('\\', '/');
+            var mods = Path.GetFullPath(ModsDir).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            if (!dir.StartsWith(mods, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ModOperationException("mods.err.notfound", id);
+            }
+
+            var sel = ModRules.WithDefaults(Settings.Load(), all);
+            var dependents = ModRules.ToDisable(id, all, sel);
+            Microsoft.VisualBasic.FileIO.FileSystem.DeleteDirectory(dir, Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+            foreach (var x in dependents)
+            {
+                sel.SetEnabled(x, false);
+            }
+
+            sel.Enabled.Remove(id);
+            sel.Disabled.Remove(id);
+            sel.Order.Remove(id);
+            Settings.Save(sel);
+            return dependents;
+        }
+
         // ----------------------------------------------------------- helpers
 
         private static void RemoveEmptyDirs(string dir, bool keepRoot)
