@@ -1469,7 +1469,36 @@ namespace FOEReLauncher
 
         private CatalogEntry? Selected() => _catalog?.Find(SelectedId() ?? string.Empty);
 
-        private CatalogState StateOf(CatalogEntry e) => _service.Mods.StateOf(e, _packages);
+        // The state of every catalogue entry, worked out once for one set of inputs: the scanned packages, the catalogue
+        // and the two install records (LoadCached gives the same object until its file changes). A list fill, the
+        // buttons and the details ask for states dozens of times; each answer used to read the records again.
+        private Dictionary<string, CatalogState>? _states;
+        private object? _statesPackages;
+        private object? _statesCatalog;
+        private object? _statesRecord;
+        private object? _statesGame;
+
+        private CatalogState StateOf(CatalogEntry e)
+        {
+            var record = _service.Mods.LoadRecord();
+            var game = _service.Mods.GameState();
+            if (_states == null || !ReferenceEquals(_statesPackages, _packages) || !ReferenceEquals(_statesCatalog, _catalog)
+                || !ReferenceEquals(_statesRecord, record) || !ReferenceEquals(_statesGame, game))
+            {
+                _states = new Dictionary<string, CatalogState>(StringComparer.Ordinal);
+                foreach (var x in _catalog?.Entries ?? new List<CatalogEntry>())
+                {
+                    _states[x.Id] = _service.Mods.StateOf(x, _packages, game, record);
+                }
+
+                _statesPackages = _packages;
+                _statesCatalog = _catalog;
+                _statesRecord = record;
+                _statesGame = game;
+            }
+
+            return _states.TryGetValue(e.Id, out var s) ? s : _service.Mods.StateOf(e, _packages, game, record);
+        }
 
         private List<CatalogEntry> GroupEntries(string group) =>
             (_catalog?.Entries ?? new List<CatalogEntry>()).Where(e => e.Group == group).ToList();

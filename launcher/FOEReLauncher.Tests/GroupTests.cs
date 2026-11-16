@@ -73,6 +73,45 @@ namespace FOEReLauncher.Tests
         }
 
         [Fact]
+        public void InstalledRecord_ParsedOncePerChange()
+        {
+            // The lists ask for the record for every row; with voice packs it lists thousands of files, so reading it again
+            // for each question made opening a group stall for seconds.
+            using (var dir = new TempDir())
+            {
+                var path = dir.Sub("installed-mods.json");
+                Assert.Same(InstalledMods.LoadCached(path), InstalledMods.LoadCached(path));
+                Assert.Empty(InstalledMods.LoadCached(path).Mods);
+
+                var rec = new InstalledMods();
+                foreach (var id in new[] { "voice_a", "voice_b" })
+                {
+                    var mod = new InstalledMod { Id = id, Version = "1.0.0", Sha256 = Sha, Dir = "Mods/" + id };
+                    for (var i = 0; i < 2000; i++)
+                    {
+                        mod.Files.Add(new InstalledModFile("Mods/" + id + "/voice/line_" + i + ".ogg", 50000 + i, Sha));
+                    }
+
+                    rec.Mods.Add(mod);
+                }
+
+                rec.Save(path);
+                var first = InstalledMods.LoadCached(path);
+                Assert.Equal(2000, first.Find("voice_b")!.Files.Count);
+                for (var i = 0; i < 200; i++)
+                {
+                    Assert.Same(first, InstalledMods.LoadCached(path));
+                }
+
+                rec.Mods.Add(new InstalledMod { Id = "late", Version = "1.0.0", Sha256 = Sha, Dir = "Mods/late" });
+                rec.Save(path);
+                var second = InstalledMods.LoadCached(path);
+                Assert.NotSame(first, second);
+                Assert.NotNull(second.Find("late"));
+            }
+        }
+
+        [Fact]
         public void GroupOf_RecordOrFolder()
         {
             using (var dir = new TempDir())

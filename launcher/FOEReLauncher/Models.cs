@@ -489,6 +489,9 @@ namespace FOEReLauncher
         private static long _cachedSize;
         private static InstalledState? _cached;
 
+        // One empty record for a missing file, so readers that compare records see "no change" between calls.
+        private static readonly InstalledState NoFile = Empty();
+
         /// <summary>The record for reading only, parsed once per change of the file (by its time and size). The record
         /// lists every file of the game (about 12 MB of JSON, 0.7 s to parse) and the window asks for it on every
         /// button update and list row; never change the returned object, <see cref="Load"/> gives a private copy.</summary>
@@ -497,7 +500,7 @@ namespace FOEReLauncher
             var info = new FileInfo(path);
             if (!info.Exists)
             {
-                return Empty();
+                return NoFile;
             }
 
             lock (CacheLock)

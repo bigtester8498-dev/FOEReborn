@@ -276,11 +276,11 @@ namespace FOEReLauncher
             Groups.Add(group);
         }
 
-        private static readonly object CacheLock = new object();
-        private static string? _cachedPath;
-        private static DateTime _cachedTime;
-        private static long _cachedSize;
-        private static InstalledMods? _cached;
+        private static readonly Dictionary<string, (DateTime Time, long Size, InstalledMods Record)> Cache =
+            new Dictionary<string, (DateTime, long, InstalledMods)>(StringComparer.OrdinalIgnoreCase);
+
+        // One empty record for a missing file, so readers that compare records see "no change" between calls.
+        private static readonly InstalledMods NoFile = new InstalledMods();
 
         /// <summary>The record for reading only, parsed once per change of the file (by its time and size). It lists every
         /// file of every installed mod (a voice pack alone has thousands) and the lists ask for it for every row, so
@@ -291,21 +291,19 @@ namespace FOEReLauncher
             var info = new FileInfo(path);
             if (!info.Exists)
             {
-                return new InstalledMods();
+                return NoFile;
             }
 
-            lock (CacheLock)
+            lock (Cache)
             {
-                if (_cached != null && _cachedPath == info.FullName && _cachedTime == info.LastWriteTimeUtc && _cachedSize == info.Length)
+                if (Cache.TryGetValue(info.FullName, out var c) && c.Time == info.LastWriteTimeUtc && c.Size == info.Length)
                 {
-                    return _cached;
+                    return c.Record;
                 }
 
-                _cached = Load(info.FullName);
-                _cachedPath = info.FullName;
-                _cachedTime = info.LastWriteTimeUtc;
-                _cachedSize = info.Length;
-                return _cached;
+                var record = Load(info.FullName);
+                Cache[info.FullName] = (info.LastWriteTimeUtc, info.Length, record);
+                return record;
             }
         }
 
