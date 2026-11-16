@@ -100,13 +100,15 @@ namespace FOEReLauncher
         /// <summary>Set by the window: a running game owns Mods/ and settings.json, so every change is refused.</summary>
         public Func<bool> GameRunning { get; set; } = () => false;
 
-        public InstalledMods LoadRecord() => InstalledMods.Load(RecordFile);
+        /// <summary>installed-mods.json for reading only (cached, see <see cref="InstalledMods.LoadCached"/>): the lists ask
+        /// for it for every row. Code that changes the record reads a private copy with <see cref="InstalledMods.Load"/>.</summary>
+        public InstalledMods LoadRecord() => InstalledMods.LoadCached(RecordFile);
 
         /// <summary>Mods installed from the catalogue before it had groups take the group the catalogue gives them now
         /// (their folders stay where they are). Returns whether the record changed.</summary>
         public bool AdoptGroups(ModCatalog catalog)
         {
-            var record = LoadRecord();
+            var record = InstalledMods.Load(RecordFile);
             var changed = false;
             foreach (var mine in record.Mods)
             {
@@ -338,7 +340,7 @@ namespace FOEReLauncher
         public async Task<InstalledMod> InstallAsync(CatalogEntry entry, IProgress<double>? progress, CancellationToken ct, ModGroupInfo? group = null)
         {
             EnsureGameStopped();
-            var record = LoadRecord();
+            var record = InstalledMods.Load(RecordFile);
             var packages = ModRules.Discover(Path.Combine(GameDir, "Content"), ModsDir);
             var existing = packages.FirstOrDefault(p => p.Id == entry.Id && !p.Core && p.State != ModState.Duplicate);
             var mine = record.Find(entry.Id);
@@ -616,7 +618,7 @@ namespace FOEReLauncher
         public List<string> Remove(string id)
         {
             EnsureGameStopped();
-            var record = LoadRecord();
+            var record = InstalledMods.Load(RecordFile);
             var mine = record.Find(id) ?? throw new ModOperationException("mods.err.notmine", id);
             var all = ModRules.Discover(Path.Combine(GameDir, "Content"), ModsDir);
             var sel = ModRules.WithDefaults(Settings.Load(), all);

@@ -201,6 +201,10 @@ namespace FOEReLauncher
 
         private readonly Dictionary<string, RowLook> _looks = new Dictionary<string, RowLook>(StringComparer.Ordinal);
 
+        // One off-screen buffer kept for every row: the shared context keeps only buffers up to 225x96 and made a new
+        // window-sized one for each row of each repaint.
+        private readonly BufferedGraphicsContext _rowBuffers = new BufferedGraphicsContext();
+
         public PipList(bool checkBoxes)
         {
             View = View.Details;
@@ -250,6 +254,16 @@ namespace FOEReLauncher
         }
 
         public void SetLook(string tag, RowLook look) => _looks[tag] = look;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _rowBuffers.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
 
         /// <summary>
         /// Makes the list show these rows (matched by tag) by changing only what differs: rows that stay keep their
@@ -389,7 +403,13 @@ namespace FOEReLauncher
             // The buffer covers the client area from (0, 0), so GDI text (which ignores a Graphics offset) lands where it
             // should; only the row is copied to the screen.
             var area = new Rectangle(0, 0, Math.Max(ClientSize.Width, row.Right), Math.Max(ClientSize.Height, row.Bottom));
-            using (var buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, area))
+            var max = _rowBuffers.MaximumBuffer;
+            if (max.Width <= area.Width || max.Height <= area.Height)
+            {
+                _rowBuffers.MaximumBuffer = new Size(Math.Max(max.Width, area.Width + 1), Math.Max(max.Height, area.Height + 1));
+            }
+
+            using (var buffer = _rowBuffers.Allocate(e.Graphics, area))
             {
                 DrawRow(buffer.Graphics, e.Item, row);
                 var src = buffer.Graphics.GetHdc();

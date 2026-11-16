@@ -276,6 +276,39 @@ namespace FOEReLauncher
             Groups.Add(group);
         }
 
+        private static readonly object CacheLock = new object();
+        private static string? _cachedPath;
+        private static DateTime _cachedTime;
+        private static long _cachedSize;
+        private static InstalledMods? _cached;
+
+        /// <summary>The record for reading only, parsed once per change of the file (by its time and size). It lists every
+        /// file of every installed mod (a voice pack alone has thousands) and the lists ask for it for every row, so
+        /// opening a group parsed it about a hundred times; never change the returned object, <see cref="Load"/> gives a
+        /// private copy.</summary>
+        public static InstalledMods LoadCached(string path)
+        {
+            var info = new FileInfo(path);
+            if (!info.Exists)
+            {
+                return new InstalledMods();
+            }
+
+            lock (CacheLock)
+            {
+                if (_cached != null && _cachedPath == info.FullName && _cachedTime == info.LastWriteTimeUtc && _cachedSize == info.Length)
+                {
+                    return _cached;
+                }
+
+                _cached = Load(info.FullName);
+                _cachedPath = info.FullName;
+                _cachedTime = info.LastWriteTimeUtc;
+                _cachedSize = info.Length;
+                return _cached;
+            }
+        }
+
         public static InstalledMods Load(string path)
         {
             var res = new InstalledMods();
