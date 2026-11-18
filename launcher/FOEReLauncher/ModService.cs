@@ -104,6 +104,38 @@ namespace FOEReLauncher
         /// for it for every row. Code that changes the record reads a private copy with <see cref="InstalledMods.Load"/>.</summary>
         public InstalledMods LoadRecord() => InstalledMods.LoadCached(RecordFile);
 
+        /// <summary>A mod's name in the launcher's language: package.json "names", else the catalogue's name kept in
+        /// installed-mods.json, else its "name".</summary>
+        public string NameOf(ModPackage p)
+        {
+            var lang = Texts.Language;
+            var own = p.Manifest.NameFor(lang);
+            if (own != null)
+            {
+                return own;
+            }
+
+            var kept = LoadRecord().Find(p.Id)?.Name(lang);
+            return string.IsNullOrEmpty(kept) ? p.Manifest.DisplayName : kept!;
+        }
+
+        /// <summary><see cref="NameOf(ModPackage)"/> for a package that may be missing: its id then.</summary>
+        public string NameOf(ModPackage? p, string id) => p == null ? id : NameOf(p);
+
+        /// <summary>A mod's description in the launcher's language, by the same order as <see cref="NameOf(ModPackage)"/>.</summary>
+        public string DescriptionOf(ModPackage p)
+        {
+            var lang = Texts.Language;
+            var own = p.Manifest.DescriptionFor(lang);
+            if (own != null)
+            {
+                return own;
+            }
+
+            var kept = LoadRecord().Find(p.Id)?.Description(lang);
+            return string.IsNullOrEmpty(kept) ? p.Manifest.Description : kept!;
+        }
+
         /// <summary>Mods installed from the catalogue before it had groups take the group the catalogue gives them now
         /// (their folders stay where they are). Returns whether the record changed.</summary>
         public bool AdoptGroups(ModCatalog catalog)
@@ -113,6 +145,11 @@ namespace FOEReLauncher
             foreach (var mine in record.Mods)
             {
                 var entry = catalog.Find(mine.Id);
+                if (entry != null && mine.KeepTexts(entry))
+                {
+                    changed = true;
+                }
+
                 if (entry == null || entry.Group == mine.Group)
                 {
                     continue;
@@ -433,6 +470,10 @@ namespace FOEReLauncher
                 Dir = relDir,
                 InstalledAt = InstalledMods.Now(),
                 Group = entry.Group,
+                NameRu = entry.NameRu,
+                NameEn = entry.NameEn,
+                DescriptionRu = entry.DescriptionRu,
+                DescriptionEn = entry.DescriptionEn,
                 Files = files.Select(f => new InstalledModFile(relDir + "/" + f.Path, f.Size, f.Sha256)).ToList()
             };
             record.Mods.RemoveAll(m => m.Id == entry.Id);

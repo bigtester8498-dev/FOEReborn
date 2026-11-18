@@ -73,6 +73,32 @@ namespace FOEReLauncher.Tests
         }
 
         [Fact]
+        public void ModNames_ByLanguage()
+        {
+            var m = ModManifest.Parse("{\"id\":\"a\",\"version\":\"1.0.0\",\"name\":\"Anvil\",\"names\":{\"ru\":\"Наковальня\"},\"description\":\"Drops\",\"descriptions\":{\"ru\":\"Падает\"}}")!;
+            Assert.Equal("Наковальня", m.NameFor("ru"));
+            Assert.Null(m.NameFor("en"));
+            Assert.Equal("Падает", m.DescriptionFor("ru"));
+            Assert.Throws<FormatException>(() => ModManifest.Parse("{\"id\":\"a\",\"version\":\"1.0.0\",\"names\":\"x\"}"));
+
+            // The catalogue's texts stay in the record, so mods without "names" are shown in the launcher's language too.
+            using (var dir = new TempDir())
+            {
+                var path = dir.Sub("installed-mods.json");
+                var rec = new InstalledMods();
+                var mod = new InstalledMod { Id = "a", Version = "1.0.0", Sha256 = Sha, Dir = "Mods/a" };
+                Assert.True(mod.KeepTexts(new CatalogEntry { Id = "a", NameRu = "Наковальня", NameEn = "Anvil", DescriptionEn = "Drops" }));
+                Assert.False(mod.KeepTexts(new CatalogEntry { Id = "a", NameRu = "Наковальня", NameEn = "Anvil", DescriptionEn = "Drops" }));
+                rec.Mods.Add(mod);
+                rec.Save(path);
+                var back = InstalledMods.Load(path).Find("a")!;
+                Assert.Equal("Наковальня", back.Name("ru"));
+                Assert.Equal("Anvil", back.Name("en"));
+                Assert.Equal("Drops", back.Description("ru"));
+            }
+        }
+
+        [Fact]
         public void InstalledRecord_ParsedOncePerChange()
         {
             // The lists ask for the record for every row; with voice packs it lists thousands of files, so reading it again

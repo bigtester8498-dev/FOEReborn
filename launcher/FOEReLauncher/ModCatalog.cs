@@ -247,6 +247,32 @@ namespace FOEReLauncher
         /// <summary>The catalogue group the mod was installed from (empty: none).</summary>
         public string Group { get; set; } = string.Empty;
 
+        /// <summary>The catalogue's texts of the mod, kept so the Mods tab shows them in the launcher's language even for
+        /// mods whose package.json has no "names".</summary>
+        public string NameRu { get; set; } = string.Empty;
+        public string NameEn { get; set; } = string.Empty;
+        public string DescriptionRu { get; set; } = string.Empty;
+        public string DescriptionEn { get; set; } = string.Empty;
+
+        public string Name(string language) => language == "ru" && NameRu.Length > 0 ? NameRu : NameEn;
+
+        public string Description(string language) => language == "ru" && DescriptionRu.Length > 0 ? DescriptionRu : DescriptionEn;
+
+        /// <summary>Takes the catalogue entry's texts; returns whether they changed.</summary>
+        public bool KeepTexts(CatalogEntry e)
+        {
+            if (NameRu == e.NameRu && NameEn == e.NameEn && DescriptionRu == e.DescriptionRu && DescriptionEn == e.DescriptionEn)
+            {
+                return false;
+            }
+
+            NameRu = e.NameRu;
+            NameEn = e.NameEn;
+            DescriptionRu = e.DescriptionRu;
+            DescriptionEn = e.DescriptionEn;
+            return true;
+        }
+
         public List<InstalledModFile> Files { get; set; } = new List<InstalledModFile>();
     }
 
@@ -334,6 +360,18 @@ namespace FOEReLauncher
                         InstalledAt = Json.Str(m, "installedAt") ?? string.Empty,
                         Group = Json.Str(m, "group") ?? string.Empty
                     };
+                    if (m.TryGetValue("name", out var nv) && nv is Dictionary<string, object?> no)
+                    {
+                        mod.NameRu = Json.Str(no, "ru") ?? string.Empty;
+                        mod.NameEn = Json.Str(no, "en") ?? string.Empty;
+                    }
+
+                    if (m.TryGetValue("description", out var dv) && dv is Dictionary<string, object?> dob)
+                    {
+                        mod.DescriptionRu = Json.Str(dob, "ru") ?? string.Empty;
+                        mod.DescriptionEn = Json.Str(dob, "en") ?? string.Empty;
+                    }
+
                     if (!ModCatalog.IsSafeId(mod.Group))
                     {
                         mod.Group = string.Empty;
@@ -387,6 +425,16 @@ namespace FOEReLauncher
                 if (m.Group.Length > 0)
                 {
                     o["group"] = m.Group;
+                }
+
+                if (m.NameRu.Length + m.NameEn.Length > 0)
+                {
+                    o["name"] = new Dictionary<string, object?> { ["ru"] = m.NameRu, ["en"] = m.NameEn };
+                }
+
+                if (m.DescriptionRu.Length + m.DescriptionEn.Length > 0)
+                {
+                    o["description"] = new Dictionary<string, object?> { ["ru"] = m.DescriptionRu, ["en"] = m.DescriptionEn };
                 }
 
                 o["files"] = m.Files.Select(f => (object?)new Dictionary<string, object?> { ["path"] = f.Path, ["size"] = f.Size, ["sha256"] = f.Sha256 }).ToList();

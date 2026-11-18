@@ -52,6 +52,18 @@ namespace FOEReLauncher
 
         public string DisplayName => string.IsNullOrEmpty(Name) ? Id : Name;
 
+        /// <summary>"names": the name in other languages by language code ({"ru": ".."}).</summary>
+        public Dictionary<string, string> Names { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>"descriptions": the description in other languages by language code.</summary>
+        public Dictionary<string, string> Descriptions { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>The name in a language from "names", else null.</summary>
+        public string? NameFor(string language) => Names.TryGetValue(language, out var n) && n.Length > 0 ? n : null;
+
+        /// <summary>The description in a language from "descriptions", else null.</summary>
+        public string? DescriptionFor(string language) => Descriptions.TryGetValue(language, out var t) && t.Length > 0 ? t : null;
+
         /// <summary>Reads a manifest; throws <see cref="FormatException"/> when the text is not a JSON object of
         /// the right shape, and returns null for an empty file or a JSON null (the game calls both "empty").</summary>
         public static ModManifest? Parse(string text)
@@ -82,6 +94,8 @@ namespace FOEReLauncher
                     case "name": m.Name = Text(pair.Value, pair.Key); break;
                     case "version": m.Version = Text(pair.Value, pair.Key); break;
                     case "description": m.Description = Text(pair.Value, pair.Key); break;
+                    case "names": m.Names = TextMap(pair.Value, pair.Key); break;
+                    case "descriptions": m.Descriptions = TextMap(pair.Value, pair.Key); break;
                     case "author": m.Author = Text(pair.Value, pair.Key); break;
                     case "game": m.Game = Text(pair.Value, pair.Key); break;
                     case "requires": m.Requires = Requirements(pair.Value, pair.Key); break;
@@ -108,6 +122,27 @@ namespace FOEReLauncher
                 case double d: return d.ToString("R", CultureInfo.InvariantCulture);
                 default: throw new FormatException("\"" + key + "\" must be text");
             }
+        }
+
+        private static Dictionary<string, string> TextMap(object? v, string key)
+        {
+            var res = new Dictionary<string, string>();
+            if (v == null)
+            {
+                return res;
+            }
+
+            if (!(v is Dictionary<string, object?> o))
+            {
+                throw new FormatException("\"" + key + "\" must be an object of texts by language");
+            }
+
+            foreach (var pair in o)
+            {
+                res[pair.Key] = Text(pair.Value, key);
+            }
+
+            return res;
         }
 
         private static bool Flag(object? v, string key)

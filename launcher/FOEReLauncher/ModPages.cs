@@ -828,7 +828,7 @@ namespace FOEReLauncher
                     {
                         var p = listed.First(x => x.Id == id);
                         var source = _service.Mods.SourceOf(p, game, record);
-                        var item = new ListViewItem(p.Manifest.DisplayName)
+                        var item = new ListViewItem(_service.Mods.NameOf(p))
                         {
                             Tag = p.Id,
                             Checked = _selection.IsEnabled(p.Id)
@@ -934,10 +934,10 @@ namespace FOEReLauncher
                 return;
             }
 
-            var name = p.Manifest.DisplayName;
+            var name = _service.Mods.NameOf(p);
             var byHand = _service.Mods.SourceOf(p) == ModSource.Hand;
             var dependents = ModRules.ToDisable(p.Id, _packages, _selection).Where(x => x != p.Id).ToList();
-            var depNames = string.Join(", ", dependents.Select(id => _packages.FirstOrDefault(x => x.Id == id)?.Manifest.DisplayName ?? id));
+            var depNames = string.Join(", ", dependents.Select(id => _service.Mods.NameOf(_packages.FirstOrDefault(x => x.Id == id), id)));
             var question = dependents.Count > 0 ? Texts.T("cat.confirm.remove.deps", name, depNames) : Texts.T("cat.confirm.remove", name);
             if (byHand)
             {
@@ -953,7 +953,7 @@ namespace FOEReLauncher
             try
             {
                 var off = _service.Mods.RemoveAny(p.Id).Where(x => x != p.Id).ToList();
-                var offNames = string.Join(", ", off.Select(id => _packages.FirstOrDefault(x => x.Id == id)?.Manifest.DisplayName ?? id));
+                var offNames = string.Join(", ", off.Select(id => _service.Mods.NameOf(_packages.FirstOrDefault(x => x.Id == id), id)));
                 done = off.Count > 0 ? Texts.T("cat.st.removed.deps", name, offNames) : Texts.T("cat.st.removed.done", name);
             }
             catch (Exception ex) when (ex is ModOperationException || ex is IOException || ex is UnauthorizedAccessException || ex is OperationCanceledException)
@@ -1001,15 +1001,16 @@ namespace FOEReLauncher
             }
 
             var m = p.Manifest;
-            ModUi.Append(_details, m.DisplayName + "  " + m.Version, Theme.Bright, bold: true);
+            ModUi.Append(_details, _service.Mods.NameOf(p) + "  " + m.Version, Theme.Bright, bold: true);
             if (m.Author.Length > 0)
             {
                 ModUi.Append(_details, Texts.T("mods.d.by", m.Author), Theme.Dim);
             }
 
-            if (m.Description.Length > 0)
+            var about = _service.Mods.DescriptionOf(p);
+            if (about.Length > 0)
             {
-                ModUi.Append(_details, m.Description);
+                ModUi.Append(_details, about);
             }
 
             ModUi.Append(_details, Texts.T("mods.d.state", ModUi.StateWord(p, _selection)), p.Active ? Theme.Bright : Theme.Body);
@@ -1109,7 +1110,7 @@ namespace FOEReLauncher
 
         private ModPackage? Package(string id) => _packages.FirstOrDefault(x => x.Id == id && !x.Core && x.State != ModState.Duplicate);
 
-        private string NameOf(string id) => Package(id)?.Manifest.DisplayName ?? id;
+        private string NameOf(string id) => _service.Mods.NameOf(Package(id), id);
 
         /// <summary>The game's SetModEnabled + ApplyModEnabled: consent for code, the cascade, saved at once. The
         /// launcher asks before the change (one confirm listing the mods), the game reports it after.</summary>
@@ -1125,7 +1126,7 @@ namespace FOEReLauncher
             if (with.Count > 0)
             {
                 var names = string.Join(", ", with.Select(NameOf));
-                if (!ConfirmForm.Ask(FindForm(), Texts.T("mods.confirm.title"), Texts.T(on ? "mods.confirm.on" : "mods.confirm.off", p.Manifest.DisplayName, names), Texts.T("btn.ok")))
+                if (!ConfirmForm.Ask(FindForm(), Texts.T("mods.confirm.title"), Texts.T(on ? "mods.confirm.on" : "mods.confirm.off", _service.Mods.NameOf(p), names), Texts.T("btn.ok")))
                 {
                     return;
                 }
@@ -1138,7 +1139,7 @@ namespace FOEReLauncher
                 {
                     if (x != null && x.HasCode && !_selection.HasConsent(x.Id, x.Manifest.Version))
                     {
-                        if (!ConfirmForm.Ask(FindForm(), Texts.T("mods.c.title"), Texts.T("mods.c.text", x.Manifest.DisplayName, string.Join(", ", x.Manifest.Assemblies)), Texts.T("mods.c.allow"), warning: true))
+                        if (!ConfirmForm.Ask(FindForm(), Texts.T("mods.c.title"), Texts.T("mods.c.text", _service.Mods.NameOf(x), string.Join(", ", x.Manifest.Assemblies)), Texts.T("mods.c.allow"), warning: true))
                         {
                             return;
                         }
@@ -1171,7 +1172,7 @@ namespace FOEReLauncher
 
             if (Save(sel))
             {
-                var also = with.Count == 0 ? string.Empty : " " + Texts.T(on ? "mods.alsoon" : "mods.alsooff", p.Manifest.DisplayName, string.Join(", ", with.Select(NameOf)));
+                var also = with.Count == 0 ? string.Empty : " " + Texts.T(on ? "mods.alsoon" : "mods.alsooff", _service.Mods.NameOf(p), string.Join(", ", with.Select(NameOf)));
                 Reload();
                 SetStatus(() => Texts.T("mods.saved") + also);
             }
@@ -1197,7 +1198,7 @@ namespace FOEReLauncher
 
             var consent = plan.NeedConsent.Select(Package).Where(x => x != null).Cast<ModPackage>().ToList();
             if (consent.Count > 0 &&
-                !ConfirmForm.Ask(FindForm(), Texts.T("mods.c.title"), Texts.T("group.c.text", string.Join(", ", consent.Select(x => x.Manifest.DisplayName))), Texts.T("mods.c.allow"), warning: true))
+                !ConfirmForm.Ask(FindForm(), Texts.T("mods.c.title"), Texts.T("group.c.text", string.Join(", ", consent.Select(x => _service.Mods.NameOf(x)))), Texts.T("mods.c.allow"), warning: true))
             {
                 return;
             }
@@ -2095,7 +2096,7 @@ namespace FOEReLauncher
         {
             ScanLocal();
             var plan = ModGroups.PlanToggle(ids, true, _packages, _selection);
-            var name = new Func<string, string>(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id);
+            var name = new Func<string, string>(id => _service.Mods.NameOf(_packages.FirstOrDefault(p => p.Id == id), id));
             var ask = plan.NeedConsent.Where(id => !allowed.Contains(id)).ToList();
             if (ask.Count > 0 &&
                 !ConfirmForm.Ask(Owner, Texts.T("mods.c.title"), Texts.T("group.c.text", string.Join(", ", ask.Select(name))), Texts.T("mods.c.allow"), warning: true))
@@ -2161,7 +2162,7 @@ namespace FOEReLauncher
 
             var ids = entries.Select(x => x.Id).ToList();
             var dependents = ids.SelectMany(id => ModRules.ToDisable(id, _packages, _selection)).Where(x => !ids.Contains(x)).Distinct().ToList();
-            var depNames = string.Join(", ", dependents.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
+            var depNames = string.Join(", ", dependents.Select(id => _service.Mods.NameOf(_packages.FirstOrDefault(p => p.Id == id), id)));
             string question;
             if (group != null)
             {
@@ -2198,7 +2199,7 @@ namespace FOEReLauncher
                 }
             }
 
-            var offNames = string.Join(", ", off.Select(id => _packages.FirstOrDefault(p => p.Id == id)?.Manifest.DisplayName ?? id));
+            var offNames = string.Join(", ", off.Select(id => _service.Mods.NameOf(_packages.FirstOrDefault(p => p.Id == id), id)));
             var parts = new List<string>();
             if (removed.Count > 0)
             {
