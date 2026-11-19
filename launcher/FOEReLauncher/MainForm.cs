@@ -86,6 +86,9 @@ namespace FOEReLauncher
         private bool _actionEnabled;
         private bool _busy;
         private bool _gameUpdateShown; // not Button.Visible: that reads false while the Game tab is hidden
+        private bool _launcherUpdateShown; // the same for the launcher update button
+        private bool _progressShown; // the same for the progress stripe
+        private bool _whatsNewShown; // the same for the "What's new" block
 
         /// <summary>The last status line as a key and its arguments, so a language switch can redraw it.</summary>
         private Func<string> _status = () => string.Empty;
@@ -379,7 +382,7 @@ namespace FOEReLauncher
                 stack.Add(_gameUpdateButton);
             }
 
-            if (_launcherUpdateButton.Visible)
+            if (_launcherUpdateShown)
             {
                 stack.Add(_launcherUpdateButton);
             }
@@ -388,7 +391,7 @@ namespace FOEReLauncher
             stack.Add(_verifyButton);
             stack.Add(_patchNotesButton);
             stack.Add(_channelBox);
-            if (_progress.Visible)
+            if (_progressShown)
             {
                 stack.Add(_progress);
             }
@@ -429,7 +432,7 @@ namespace FOEReLauncher
 
             // "What's new" fills the space between the versions and the buttons, in a thin frame.
             _whatsNewFrame = Rectangle.Empty;
-            if (_whatsNewTitle.Visible)
+            if (_whatsNewShown)
             {
                 var top = _availableLabel.Bottom + Theme.S(12);
                 var frame = new Rectangle(0, top, width, Math.Max(0, stackTop - Theme.S(12) - top));
@@ -1058,11 +1061,12 @@ namespace FOEReLauncher
 
         private void SetProgressVisible(bool visible)
         {
-            if (_progress.Visible == visible)
+            if (_progressShown == visible)
             {
                 return;
             }
 
+            _progressShown = visible;
             _progress.Visible = visible;
             LayoutUi();
         }
@@ -1081,11 +1085,12 @@ namespace FOEReLauncher
 
         private void SetLauncherUpdateVisible(bool visible)
         {
-            if (_launcherUpdateButton.Visible == visible)
+            if (_launcherUpdateShown == visible)
             {
                 return;
             }
 
+            _launcherUpdateShown = visible;
             _launcherUpdateButton.Visible = visible;
             LayoutUi();
         }
@@ -1249,6 +1254,7 @@ namespace FOEReLauncher
 
         private void SetWhatsNewVisible(bool visible)
         {
+            _whatsNewShown = visible;
             _whatsNewTitle.Visible = visible;
             _whatsNewBody.Visible = visible;
             LayoutUi();
