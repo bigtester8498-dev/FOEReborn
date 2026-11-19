@@ -20,7 +20,8 @@
       "reborn_anvil",
       "reborn_twofront",
       "reborn_autoopen",
-      "reborn_hd"
+      "reborn_hd",
+      "reborn_everfree"
     ]
   },
   "voice": {
@@ -36,7 +37,8 @@
     "mods": [
       "reborn_voice",
       "reborn_voice_ru_v3",
-      "reborn_voice_en_v1"
+      "reborn_voice_en_v1",
+      "reborn_everfree_voice"
     ]
   }
 }
